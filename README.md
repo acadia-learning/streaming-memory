@@ -26,6 +26,8 @@ Background: LLM creates memory blocks from cache
 - **First-person Memories**: Agent remembers from its own perspective
 - **Emotional Intensity**: Memories tagged with surprise, arousal, control
 - **Temporal Awareness**: Agent sees current time and memory ages
+- **Save/Load**: Persist and restore memories to/from JSON
+- **Benchmarking**: Process existing conversation logs (JSONL format)
 
 ## Setup
 
@@ -41,7 +43,14 @@ OPENAI_API_KEY=your-openai-key
 ## Running
 
 ```bash
+# Start fresh
 uv run python chat.py
+
+# Load existing memories
+uv run python chat.py --load memories.json
+
+# Auto-save on exit
+uv run python chat.py -l memories.json -s memories.json
 ```
 
 ### Commands
@@ -54,7 +63,54 @@ uv run python chat.py
 | `clear` | Clear both memories |
 | `clear working` | Clear only working memory |
 | `clear ltm` | Clear only long-term memory |
+| `save <path>` | Save memories to file |
 | `exit` | Quit |
+
+## Benchmarking with Existing Data
+
+Process existing conversation logs to build memories:
+
+```python
+from memory import LongTermMemory, load_raw_jsonl
+
+# Load conversation data (JSONL format)
+chunks = load_raw_jsonl("conversations.jsonl", limit=500)
+
+# Process into memories (uses Haiku by default - cheap & fast)
+ltm = LongTermMemory()
+memories = ltm.process_chunk_stream(chunks, batch_size=100)
+
+# Save for later use
+ltm.save("memories.json")
+
+# Load and chat
+ltm = LongTermMemory.from_file("memories.json")
+results = ltm.query("What did the user struggle with?")
+```
+
+### JSONL Format
+
+The loader expects JSONL with `message_data` objects:
+
+```json
+{"timestamp": "...", "message_data": {"type": "message", "role": "user", "content": "Hello!"}}
+{"timestamp": "...", "message_data": {"type": "message", "role": "assistant", "content": "Hi there!"}}
+{"timestamp": "...", "message_data": {"type": "function_call", "name": "search", "arguments": "{...}"}}
+{"timestamp": "...", "message_data": {"type": "function_call_output", "output": "{...}"}}
+```
+
+### Model Configuration
+
+Memory extraction uses Haiku 4.5 by default ($1/M in, $5/M out):
+
+```python
+# Default (Haiku - cheap & fast)
+ltm = LongTermMemory()
+
+# Or specify model
+ltm = LongTermMemory(memory_model="claude-sonnet-4-20250514")  # Balanced
+ltm = LongTermMemory(memory_model="claude-opus-4-5-20251101")  # Best quality
+```
 
 ## Memory System
 
@@ -108,7 +164,7 @@ Memories are ranked by composite score combining:
 After each response, a background process:
 
 1. Takes the cache (user input, thinking, response)
-2. Sends to Claude Opus 4.5 with Pydantic schema
+2. Sends to LLM with Pydantic schema (Haiku by default)
 3. Extracts first-person memories with emotional ratings
 4. Embeds summaries with OpenAI
 5. Stores as memory blocks
@@ -135,9 +191,52 @@ You have the following relevant memories from past experiences:
 - [5m ago] I was greeted by a user who said 'hi'
 ```
 
-## Example Session
+## API Reference
 
+### LongTermMemory
+
+```python
+# Initialize
+ltm = LongTermMemory(default_top_k=10, memory_model="claude-haiku-4-5-20251001")
+
+# Ingest content
+ltm.ingest(content, entry_type)  # "user_input" | "thinking" | "response_text"
+ltm.ingest_batch([(content, type), ...])
+
+# Process cache into memories
+ltm.process_cache_async()  # Background (non-blocking)
+ltm.process_cache_sync()   # Foreground (blocking, returns memories)
+
+# Query memories
+results = ltm.query("search text", top_k=5)  # Returns List[QueryResult]
+
+# Convenience methods for benchmarking
+ltm.ingest_interaction(user_input, assistant_response, thinking=None)
+ltm.ingest_interactions([{"user": "...", "assistant": "..."}])
+ltm.process_chunk_stream(chunks, batch_size=10)
+
+# Persistence
+ltm.save("memories.json")
+ltm.load("memories.json")
+ltm = LongTermMemory.from_file("memories.json")
+
+# Inspection
+ltm.get_stats()
+ltm.get_all_memories()
+ltm.clear()
 ```
-You: hi
 
-🔍 Querying memories... No memories yet.
+### Loaders
+
+```python
+from memory import load_raw_jsonl, load_chunks_from_jsonl, load_interactions_from_jsonl
+
+# Load all entries (production behavior)
+chunks = load_raw_jsonl("data.jsonl", limit=500)
+
+# Load filtered by role
+chunks = load_chunks_from_jsonl("data.jsonl", include_roles=["user", "assistant"])
+
+# Load as interaction pairs
+interactions = load_interactions_from_jsonl("data.jsonl", limit=100)
+```
