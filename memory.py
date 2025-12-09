@@ -13,10 +13,12 @@ Memory blocks are indexed on:
 - Created timestamp (recency)
 """
 
+import json
 import threading
+from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import List, Literal, Callable
+from typing import List, Literal, Callable, Iterable, Union
 
 from anthropic.types import ToolParam
 import numpy as np
@@ -131,20 +133,25 @@ class LongTermMemory:
     5. Increment frequency for surfaced memories
     """
     
-    # Model configuration
-    MEMORY_MODEL = "claude-opus-4-5-20251101"  # For memory extraction
+    # Model configuration defaults
+    DEFAULT_MEMORY_MODEL = "claude-haiku-4-5-20251001"  # For memory extraction
     EMBEDDING_MODEL = "text-embedding-3-small"
     
-    def __init__(self, default_top_k: int = 10):
+    def __init__(self, default_top_k: int = 10, memory_model: str | None = None):
         """
         Initialize long-term memory.
         
         Args:
             default_top_k: Default number of memories to surface per query
+            memory_model: Model to use for memory extraction. Defaults to Haiku 4.5.
+                         Options: "claude-haiku-4-5-20251001" (cheap, fast)
+                                  "claude-sonnet-4-20250514" (balanced)
+                                  "claude-opus-4-5-20251101" (best quality, expensive)
         """
         self.cache: List[CacheEntry] = []
         self.memories: List[MemoryBlock] = []
         self.default_top_k = default_top_k
+        self.memory_model = memory_model or self.DEFAULT_MEMORY_MODEL
         
         # Clients for LLM and embeddings
         self.anthropic = Anthropic()
@@ -167,6 +174,18 @@ class LongTermMemory:
         with self._lock:
             entry = CacheEntry(content=content, entry_type=entry_type)
             self.cache.append(entry)
+    
+    def ingest_batch(self, chunks: List[tuple[str, Literal["user_input", "thinking", "response_text"]]]) -> None:
+        """
+        Ingest multiple chunks into the cache at once.
+        
+        Args:
+            chunks: List of (content, entry_type) tuples
+        """
+        with self._lock:
+            for content, entry_type in chunks:
+                entry = CacheEntry(content=content, entry_type=entry_type)
+                self.cache.append(entry)
     
     def _get_embedding(self, text: str) -> List[float]:
         """Get embedding vector from OpenAI."""
@@ -244,7 +263,7 @@ Content to analyze:
 
         try:
             response = self.anthropic.messages.create(
-                model=self.MEMORY_MODEL,
+                model=self.memory_model,
                 max_tokens=2048,
                 tools=[extract_memories_tool],
                 tool_choice={"type": "tool", "name": "extract_memories"},
@@ -316,6 +335,165 @@ Content to analyze:
         thread = threading.Thread(target=self._create_memories_from_cache)
         thread.daemon = True
         thread.start()
+    
+    def process_cache_sync(self) -> List[MemoryBlock]:
+        """
+        Process cache synchronously (blocking).
+        
+        Useful for benchmarking or when you need to wait for memories to be created.
+        
+        Returns:
+            List of created MemoryBlock objects
+        """
+        return self._create_memories_from_cache()
+    
+    def ingest_interaction(
+        self,
+        user_input: str,
+        assistant_response: str,
+        thinking: str | None = None,
+        process_sync: bool = True
+    ) -> List[MemoryBlock]:
+        """
+        Ingest a complete human/agent interaction.
+        
+        This is a convenience method for benchmarking with existing conversations.
+        
+        Args:
+            user_input: The user's message
+            assistant_response: The assistant's response
+            thinking: Optional thinking/reasoning content
+            process_sync: If True, process immediately and return memories.
+                         If False, just add to cache for later processing.
+        
+        Returns:
+            List of created MemoryBlock objects (empty if process_sync=False)
+        """
+        self.ingest(user_input, "user_input")
+        if thinking:
+            self.ingest(thinking, "thinking")
+        self.ingest(assistant_response, "response_text")
+        
+        if process_sync:
+            return self.process_cache_sync()
+        return []
+    
+    def ingest_interactions(
+        self,
+        interactions: List[dict],
+        process_after_each: bool = False,
+        process_at_end: bool = True
+    ) -> List[MemoryBlock]:
+        """
+        Ingest multiple interactions for benchmarking.
+        
+        Args:
+            interactions: List of dicts with keys:
+                - 'user': str (required) - user input
+                - 'assistant': str (required) - assistant response
+                - 'thinking': str (optional) - thinking content
+            process_after_each: If True, process cache after each interaction.
+                               This simulates real-time conversation behavior.
+            process_at_end: If True (and process_after_each is False), process
+                           all interactions at once at the end.
+        
+        Returns:
+            List of all created MemoryBlock objects
+        """
+        all_memories: List[MemoryBlock] = []
+        
+        for interaction in interactions:
+            user_input = interaction.get('user', '')
+            assistant_response = interaction.get('assistant', '')
+            thinking = interaction.get('thinking')
+            
+            if not user_input or not assistant_response:
+                continue
+            
+            self.ingest(user_input, "user_input")
+            if thinking:
+                self.ingest(thinking, "thinking")
+            self.ingest(assistant_response, "response_text")
+            
+            if process_after_each:
+                memories = self.process_cache_sync()
+                all_memories.extend(memories)
+        
+        if not process_after_each and process_at_end:
+            memories = self.process_cache_sync()
+            all_memories.extend(memories)
+        
+        return all_memories
+    
+    def process_chunk_stream(
+        self,
+        chunk_stream: Iterable[Union[tuple[str, str], dict[str, str]]],
+        batch_size: int = 10
+    ) -> List[MemoryBlock]:
+        """
+        Process an arbitrary stream of existing chunks.
+        
+        This accepts any iterable of chunks and processes them in batches.
+        Useful for benchmarking with existing conversation data.
+        
+        Args:
+            chunk_stream: Iterable of chunks. Each chunk can be:
+                - tuple: (content: str, entry_type: str)
+                - dict: {'content': str, 'type': str} or {'content': str, 'entry_type': str}
+            batch_size: Number of chunks to accumulate before processing.
+                       Set to 0 to process all at once at the end.
+        
+        Returns:
+            List of all created MemoryBlock objects
+        
+        Example:
+            # From a list of tuples
+            chunks = [
+                ("Hello!", "user_input"),
+                ("Hi there!", "response_text"),
+                ("What's 2+2?", "user_input"),
+                ("Let me think...", "thinking"),
+                ("2+2 equals 4", "response_text"),
+            ]
+            memories = ltm.process_chunk_stream(chunks)
+            
+            # From a generator
+            def my_chunks():
+                yield ("Hello", "user_input")
+                yield ("Hi!", "response_text")
+            memories = ltm.process_chunk_stream(my_chunks())
+        """
+        all_memories: List[MemoryBlock] = []
+        chunk_count = 0
+        
+        for chunk in chunk_stream:
+            # Handle different chunk formats
+            if isinstance(chunk, tuple):
+                content, entry_type = chunk
+            elif isinstance(chunk, dict):
+                content = chunk.get('content', '')
+                entry_type = chunk.get('type') or chunk.get('entry_type', 'user_input')
+            else:
+                continue
+            
+            if not content:
+                continue
+            
+            self.ingest(content, entry_type)
+            chunk_count += 1
+            
+            # Process in batches if batch_size > 0
+            if batch_size > 0 and chunk_count >= batch_size:
+                memories = self.process_cache_sync()
+                all_memories.extend(memories)
+                chunk_count = 0
+        
+        # Process any remaining chunks
+        if self.cache:
+            memories = self.process_cache_sync()
+            all_memories.extend(memories)
+        
+        return all_memories
     
     # Scoring weights for composite ranking
     WEIGHT_SIMILARITY = 0.35  # Semantic relevance
@@ -552,3 +730,369 @@ Content to analyze:
         """Get all stored memories."""
         with self._lock:
             return list(self.memories)
+    
+    def save(self, path: str | Path) -> None:
+        """
+        Save memories to a JSON file.
+        
+        Args:
+            path: Path to save the memories to
+        
+        Example:
+            ltm.save("memories.json")
+        """
+        path = Path(path)
+        
+        with self._lock:
+            data = {
+                "version": 1,
+                "memory_model": self.memory_model,
+                "memories": [
+                    {
+                        "summary": mem.summary,
+                        "embedding": mem.embedding,
+                        "emotions": {
+                            "surprise": mem.emotions.surprise,
+                            "arousal": mem.emotions.arousal,
+                            "control": mem.emotions.control,
+                        },
+                        "created_at": mem.created_at.isoformat(),
+                        "frequency": mem.frequency,
+                    }
+                    for mem in self.memories
+                ]
+            }
+        
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+    
+    def load(self, path: str | Path) -> int:
+        """
+        Load memories from a JSON file.
+        
+        Memories are appended to existing memories (does not clear).
+        
+        Args:
+            path: Path to load the memories from
+        
+        Returns:
+            Number of memories loaded
+        
+        Example:
+            ltm.load("memories.json")
+        """
+        path = Path(path)
+        
+        with open(path, "r") as f:
+            data = json.load(f)
+        
+        loaded_count = 0
+        for mem_data in data.get("memories", []):
+            emotions = EmotionIntensity(
+                surprise=mem_data["emotions"]["surprise"],
+                arousal=mem_data["emotions"]["arousal"],
+                control=mem_data["emotions"]["control"],
+            )
+            
+            memory = MemoryBlock(
+                summary=mem_data["summary"],
+                embedding=mem_data["embedding"],
+                emotions=emotions,
+                created_at=datetime.fromisoformat(mem_data["created_at"]),
+                frequency=mem_data.get("frequency", 0),
+            )
+            
+            with self._lock:
+                self.memories.append(memory)
+            loaded_count += 1
+        
+        return loaded_count
+    
+    @classmethod
+    def from_file(cls, path: str | Path, **kwargs) -> "LongTermMemory":
+        """
+        Create a new LongTermMemory instance and load memories from a file.
+        
+        Args:
+            path: Path to load the memories from
+            **kwargs: Additional arguments passed to LongTermMemory.__init__
+        
+        Returns:
+            New LongTermMemory instance with loaded memories
+        
+        Example:
+            ltm = LongTermMemory.from_file("memories.json")
+        """
+        instance = cls(**kwargs)
+        instance.load(path)
+        return instance
+
+
+# =============================================================================
+# Helper Functions for Loading Existing Data
+# =============================================================================
+
+def load_interactions_from_jsonl(
+    path: str | Path,
+    include_roles: List[str] | None = None,
+    limit: int | None = None
+) -> List[dict]:
+    """
+    Load interactions from a JSONL ledger file.
+    
+    Parses the JSONL format and extracts user/assistant message pairs.
+    
+    Args:
+        path: Path to the JSONL file
+        include_roles: Roles to include. Defaults to ["user", "assistant"].
+        limit: Maximum number of interactions to return (None for all)
+    
+    Returns:
+        List of interaction dicts with 'user' and 'assistant' keys,
+        ready for use with LongTermMemory.ingest_interactions()
+    
+    Example:
+        interactions = load_interactions_from_jsonl("ryan.jsonl", limit=10)
+        ltm = LongTermMemory()
+        memories = ltm.ingest_interactions(interactions, process_after_each=True)
+    """
+    if include_roles is None:
+        include_roles = ["user", "assistant"]
+    
+    path = Path(path)
+    
+    # Parse all messages
+    messages_by_role: dict[str, List[dict]] = {"user": [], "assistant": []}
+    
+    with open(path, "r") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            
+            try:
+                entry = json.loads(line)
+                msg_data = entry.get("message_data", {})
+                role = msg_data.get("role")
+                content = msg_data.get("content")
+                
+                if role in include_roles and content:
+                    messages_by_role.setdefault(role, []).append({
+                        "content": content,
+                        "timestamp": entry.get("timestamp")
+                    })
+            except json.JSONDecodeError:
+                continue
+    
+    # Pair up user/assistant messages into interactions
+    interactions = []
+    user_msgs = messages_by_role.get("user", [])
+    assistant_msgs = messages_by_role.get("assistant", [])
+    
+    # Simple pairing: match by order (user[i] -> assistant[i])
+    for i, user_msg in enumerate(user_msgs):
+        if i < len(assistant_msgs):
+            interactions.append({
+                "user": user_msg["content"],
+                "assistant": assistant_msgs[i]["content"]
+            })
+    
+    if limit:
+        interactions = interactions[:limit]
+    
+    return interactions
+
+
+def _extract_text_from_content(content) -> str:
+    """
+    Extract plain text from various content formats.
+    
+    Handles:
+    - Plain strings
+    - Lists of content blocks (thinking, text, tool_use, etc.)
+    - Dicts with 'text' or 'content' keys
+    """
+    if isinstance(content, str):
+        return content
+    
+    if isinstance(content, list):
+        texts = []
+        for block in content:
+            if isinstance(block, str):
+                texts.append(block)
+            elif isinstance(block, dict):
+                # Handle different block types
+                if block.get("type") == "thinking":
+                    texts.append(block.get("thinking", ""))
+                elif block.get("type") == "text":
+                    texts.append(block.get("text", ""))
+                elif "text" in block:
+                    texts.append(block["text"])
+                elif "content" in block:
+                    texts.append(str(block["content"]))
+                # Skip tool_use blocks - they're not useful text
+        return "\n".join(t for t in texts if t)
+    
+    if isinstance(content, dict):
+        return content.get("text") or content.get("content") or ""
+    
+    return str(content) if content else ""
+
+
+def load_chunks_from_jsonl(
+    path: str | Path,
+    include_roles: List[str] | None = None,
+    limit: int | None = None
+) -> List[tuple[str, str]]:
+    """
+    Load raw chunks from a JSONL ledger file (filtered by role).
+    
+    Returns chunks in the format expected by process_chunk_stream().
+    
+    Args:
+        path: Path to the JSONL file
+        include_roles: Roles to include. Defaults to ["user", "assistant"].
+        limit: Maximum number of chunks to return (None for all)
+    
+    Returns:
+        List of (content, entry_type) tuples
+    
+    Example:
+        chunks = load_chunks_from_jsonl("ryan.jsonl", limit=100)
+        ltm = LongTermMemory()
+        memories = ltm.process_chunk_stream(chunks, batch_size=20)
+    """
+    if include_roles is None:
+        include_roles = ["user", "assistant"]
+    
+    path = Path(path)
+    chunks = []
+    
+    # Map roles to entry types
+    role_to_type = {
+        "user": "user_input",
+        "assistant": "response_text",
+        "system": "response_text",  # Treat system as response
+    }
+    
+    with open(path, "r") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            
+            try:
+                entry = json.loads(line)
+                msg_data = entry.get("message_data", {})
+                role = msg_data.get("role")
+                raw_content = msg_data.get("content")
+                
+                if role in include_roles and raw_content:
+                    # Extract text from complex content structures
+                    content = _extract_text_from_content(raw_content)
+                    if content.strip():
+                        entry_type = role_to_type.get(role, "response_text")
+                        chunks.append((content, entry_type))
+                        
+                        if limit and len(chunks) >= limit:
+                            break
+            except json.JSONDecodeError:
+                continue
+    
+    return chunks
+
+
+def load_raw_jsonl(
+    path: str | Path,
+    limit: int | None = None
+) -> List[tuple[str, str]]:
+    """
+    Load ALL entries from a JSONL ledger file without filtering.
+    
+    Processes every line as-is, mapping entry types appropriately.
+    This matches production behavior where all data flows through.
+    
+    Args:
+        path: Path to the JSONL file
+        limit: Maximum number of chunks to return (None for all)
+    
+    Returns:
+        List of (content, entry_type) tuples
+    
+    Example:
+        chunks = load_raw_jsonl("ryan.jsonl", limit=100)
+        ltm = LongTermMemory()
+        memories = ltm.process_chunk_stream(chunks, batch_size=20)
+    """
+    path = Path(path)
+    chunks = []
+    
+    # Map message types to entry types
+    type_mapping = {
+        "message": "response_text",  # General messages
+        "reasoning": "thinking",      # AI reasoning/thinking
+        "function_call": "response_text",  # Tool calls (AI action)
+        "function_call_output": "user_input",  # Tool results (external input)
+    }
+    
+    # Role overrides (for message type entries)
+    role_mapping = {
+        "user": "user_input",
+        "assistant": "response_text",
+        "system": "response_text",
+    }
+    
+    with open(path, "r") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            
+            try:
+                entry = json.loads(line)
+                msg_data = entry.get("message_data", {})
+                
+                msg_type = msg_data.get("type")
+                role = msg_data.get("role")
+                
+                # Extract content based on message type
+                raw_content = None
+                if msg_type == "message":
+                    raw_content = msg_data.get("content")
+                elif msg_type == "reasoning":
+                    # Reasoning has summary (list) or encrypted_content
+                    summary = msg_data.get("summary")
+                    if summary and isinstance(summary, list):
+                        raw_content = " ".join(str(s) for s in summary if s)
+                elif msg_type == "function_call":
+                    # Function calls: include name and arguments
+                    name = msg_data.get("name", "")
+                    args = msg_data.get("arguments", "")
+                    if name or args:
+                        raw_content = f"[Tool: {name}] {args}"
+                elif msg_type == "function_call_output":
+                    raw_content = msg_data.get("output")
+                else:
+                    # Fallback: try common fields
+                    raw_content = (
+                        msg_data.get("content") or
+                        msg_data.get("text") or
+                        msg_data.get("output") or
+                        ""
+                    )
+                
+                if raw_content:
+                    # Extract text from complex content structures
+                    content = _extract_text_from_content(raw_content)
+                    if content.strip():
+                        # Determine entry type: role overrides type for messages
+                        if role in role_mapping:
+                            entry_type = role_mapping[role]
+                        else:
+                            entry_type = type_mapping.get(msg_type, "response_text")
+                        
+                        chunks.append((content, entry_type))
+                        
+                        if limit and len(chunks) >= limit:
+                            break
+            except json.JSONDecodeError:
+                continue
+    
+    return chunks

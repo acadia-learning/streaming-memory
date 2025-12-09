@@ -10,9 +10,17 @@ to analyze the cache and create memory blocks with:
 - Emotional intensity (surprise, arousal, control)
 - Retrieval frequency tracking
 - Creation timestamp
+
+Usage:
+    python chat.py                     # Start fresh
+    python chat.py --load memories.json  # Load existing memories
+    python chat.py -l memories.json      # Short form
 """
 
+import argparse
 from datetime import datetime
+from pathlib import Path
+
 from dotenv import load_dotenv
 from anthropic import Anthropic
 from memory import LongTermMemory, MemoryBlock, QueryResult
@@ -268,13 +276,35 @@ def show_memories(long_term_memory: LongTermMemory) -> None:
 
 def main():
     """Run the interactive chat loop with dual memory architecture."""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Interactive chat with dual memory architecture"
+    )
+    parser.add_argument(
+        "-l", "--load",
+        type=str,
+        help="Path to a memory file to load on startup"
+    )
+    parser.add_argument(
+        "-s", "--save",
+        type=str,
+        help="Path to save memories on exit (optional)"
+    )
+    args = parser.parse_args()
+    
     client = Anthropic()
     
     # Working memory - traditional messages array for API calls
     messages: list[dict] = []
     
     # Long-term memory - background process creates semantic memory blocks
-    long_term_memory = LongTermMemory(default_top_k=10)
+    if args.load and Path(args.load).exists():
+        long_term_memory = LongTermMemory.from_file(args.load, default_top_k=10)
+        print(f"📂 Loaded {len(long_term_memory.memories)} memories from {args.load}")
+    else:
+        long_term_memory = LongTermMemory(default_top_k=10)
+        if args.load:
+            print(f"⚠️  Memory file not found: {args.load}, starting fresh")
     
     # Set callback to print when memories are created
     long_term_memory.on_memory_created = print_memory_created
@@ -285,6 +315,8 @@ def main():
     print("Working Memory: messages array for API calls")
     print("Long-term Memory: semantic memory blocks with embeddings")
     print()
+    if long_term_memory.memories:
+        print(f"Loaded with {len(long_term_memory.memories)} existing memories.")
     print("After each response, memories are created in the background.")
     print()
     print("Commands:")
@@ -294,6 +326,7 @@ def main():
     print("  'clear' - Clear both memories")
     print("  'clear working' - Clear only working memory")
     print("  'clear ltm' - Clear only long-term memory")
+    print("  'save <path>' - Save memories to file")
     print("  'exit' - Quit")
     print("=" * 60)
     print()
@@ -307,6 +340,9 @@ def main():
             
             # Handle special commands
             if user_input.lower() == "exit":
+                if args.save:
+                    long_term_memory.save(args.save)
+                    print(f"💾 Saved {len(long_term_memory.memories)} memories to {args.save}")
                 print("Goodbye!")
                 break
             
@@ -338,11 +374,24 @@ def main():
                 print("Long-term memory cleared.\n")
                 continue
             
+            if user_input.lower().startswith("save "):
+                save_path = user_input[5:].strip()
+                if save_path:
+                    long_term_memory.save(save_path)
+                    print(f"💾 Saved {len(long_term_memory.memories)} memories to {save_path}\n")
+                else:
+                    print("Usage: save <path>\n")
+                continue
+            
             # Normal conversation flow
             stream_response(client, messages, long_term_memory, user_input)
         
         except KeyboardInterrupt:
-            print("\n\nGoodbye!")
+            print("\n")
+            if args.save:
+                long_term_memory.save(args.save)
+                print(f"💾 Saved {len(long_term_memory.memories)} memories to {args.save}")
+            print("Goodbye!")
             break
         except Exception as e:
             print(f"\n❌ Error: {e}\n")
