@@ -1,24 +1,31 @@
-# Streaming Memory - Dual Memory Architecture
+# Streaming Memory
 
-A chat agent with two memory systems working together:
+An AI chat agent with long-term memory powered by semantic embeddings and multi-factor retrieval.
 
-1. **Working Memory** - Traditional messages array for API calls (short-term)
-2. **Long-term Memory** - Background process that ingests all experiences and surfaces relevant memories
-
-## Core Concept
-
-When thinking chunks stream in, they trigger **both** ingestion AND query on long-term memory. If there's a memory hit (relevant past experience), it gets surfaced to the agent.
+## Architecture
 
 ```
-User Input → Working Memory (messages array)
-           → Long-term Memory (ingest)
-
-Thinking Stream → Long-term Memory (ingest + query)
-               → If hit: Surface memory to agent
-
-Response Stream → Working Memory (append)
-               → Long-term Memory (ingest)
+User Input
+    ↓
+Query Long-term Memory (semantic + recency + emotion + frequency)
+    ↓
+Inject relevant memories into context (with timestamps)
+    ↓
+Stream response with extended thinking (Claude Opus 4.5)
+    ↓
+Ingest all experiences into cache
+    ↓
+Background: LLM creates memory blocks from cache
 ```
+
+## Features
+
+- **Extended Thinking**: Claude Opus 4.5 with visible thinking stream
+- **Semantic Search**: OpenAI embeddings (`text-embedding-3-small`)
+- **Multi-factor Retrieval**: Memories ranked by composite score
+- **First-person Memories**: Agent remembers from its own perspective
+- **Emotional Intensity**: Memories tagged with surprise, arousal, control
+- **Temporal Awareness**: Agent sees current time and memory ages
 
 ## Setup
 
@@ -26,101 +33,111 @@ Response Stream → Working Memory (append)
 # Install dependencies
 uv sync
 
-# Set up API key in .env
-ANTHROPIC_API_KEY=your-key-here
+# Set up API keys in .env
+ANTHROPIC_API_KEY=your-anthropic-key
+OPENAI_API_KEY=your-openai-key
 ```
 
 ## Running
 
 ```bash
-# Interactive chat with dual memory
 uv run python chat.py
 ```
 
-Commands:
+### Commands
 
-- `stats` - Show both memory statistics
-- `working` - Show working memory (messages array)
-- `longterm` - Show recent long-term memory entries
-- `clear` - Clear both memories
-- `exit` - Quit
+| Command | Description |
+|---------|-------------|
+| `stats` | Show memory statistics |
+| `working` | Show working memory (messages array) |
+| `memories` | Show all memory blocks |
+| `clear` | Clear both memories |
+| `clear working` | Clear only working memory |
+| `clear ltm` | Clear only long-term memory |
+| `exit` | Quit |
 
-## Memory Architecture
+## Memory System
 
-### Working Memory (`messages: list[dict]`)
-
-Traditional messages array for API calls:
-
-```python
-messages = [
-    {"role": "user", "content": "..."},
-    {"role": "assistant", "content": "..."},
-]
-```
-
-### Long-term Memory (`LongTermMemory`)
-
-Indexes all experiences for retrieval:
+### What Each Memory Stores
 
 ```python
-from memory import LongTermMemory
-
-ltm = LongTermMemory(relevance_threshold=0.3)
-
-# Ingest an experience
-ltm.ingest("user said something", entry_type="user_input")
-
-# Query for relevant memories
-results = ltm.query("related content")
-
-# Ingest AND query in one operation (for thinking chunks)
-results = ltm.ingest_and_query(thinking_chunk, entry_type="thinking")
-```
-
-### Entry Types
-
-- `user_input` - User messages
-- `thinking` - Agent's thinking/reasoning (triggers query)
-- `response_text` - Agent's responses
-
-### Query Results
-
-When a query hits, you get:
-
-```python
-QueryResult(
-    entry=MemoryEntry(...),
-    relevance_score=0.65,
-    matched_keywords=["python", "learning", "programming"]
+MemoryBlock(
+    summary="I learned the user loves hiking in Utah",
+    embedding=[...],           # 1536-dim vector
+    frequency=3,               # Times surfaced
+    created_at=datetime(...),  # When created
+    emotions=EmotionIntensity(
+        surprise=0.2,          # How unexpected (0-1)
+        arousal=0.5,           # How stimulating (0-1)
+        control=0.6            # Sense of agency (0-1)
+    )
 )
 ```
 
-## How Memory Hits Work
+### Multi-factor Scoring
 
-1. Thinking chunk streams in: `"I should consider Python programming options..."`
-2. Long-term memory indexes it AND queries for related content
-3. Query finds relevant past entry: `"user said they love Python"`
-4. Memory hit is surfaced: `💡 MEMORY HIT (relevance: 0.65)`
-5. Agent can use this context (future: inject into thinking stream)
+Memories are ranked by composite score combining:
 
-## Files
+| Factor | Weight | Function |
+|--------|--------|----------|
+| **Similarity** | 35% | Cosine similarity of embeddings |
+| **Emotion** | 30% | Power law: `x^5` (high emotions weighted exponentially) |
+| **Recency** | 25% | Exponential decay: `e^(-t/τ)` where τ=1 hour |
+| **Frequency** | 10% | Logarithmic: `log(1+f)/log(1+max)` |
 
-| File        | Purpose                                            |
-| ----------- | -------------------------------------------------- |
-| `memory.py` | `LongTermMemory` class with indexing and retrieval |
-| `chat.py`   | Interactive chat with dual memory system           |
+### Recency Decay
 
-## Example Output
+| Time Ago | Score |
+|----------|-------|
+| Just now | 1.00 |
+| 30 min | 0.61 |
+| 1 hour | 0.37 |
+| 2 hours | 0.14 |
+
+### Emotion Power Law
+
+| Avg Emotion | Score |
+|-------------|-------|
+| 0.5 | 0.03 |
+| 0.7 | 0.17 |
+| 0.9 | 0.59 |
+| 1.0 | 1.00 |
+
+## Memory Creation
+
+After each response, a background process:
+
+1. Takes the cache (user input, thinking, response)
+2. Sends to Claude Opus 4.5 with Pydantic schema
+3. Extracts first-person memories with emotional ratings
+4. Embeds summaries with OpenAI
+5. Stores as memory blocks
+
+### Example Memory
 
 ```
-You: I love playing basketball every weekend.
-Assistant: That's great! Basketball is excellent exercise...
-
-You: What sports are good for cardio?
-🤔 [thinking] The user mentioned basketball earlier...
-
-💡 MEMORY HIT (relevance: 0.45):
-   Type: user_input
-   Keywords: basketball, weekend, playing
-   Content: I love playing basketball every weekend.
+🧠 NEW MEMORY CREATED:
+   Summary: I learned that the user loves the mountains near their house in Utah
+   Emotions: surprise=0.20, arousal=0.50, control=0.60
+   Created: 11:32:12
 ```
+
+## Context Injection
+
+Before responding, memories are queried and injected:
+
+```
+Current time: 2024-12-09 11:45:32
+
+You have the following relevant memories from past experiences:
+- [30s ago] I learned that the user loves the mountains in Utah
+- [2m ago] I learned that the user owns a house in Utah
+- [5m ago] I was greeted by a user who said 'hi'
+```
+
+## Example Session
+
+```
+You: hi
+
+🔍 Querying memories... No memories yet.
