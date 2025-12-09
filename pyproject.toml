@@ -1,0 +1,17 @@
+[project]
+name = "streaming-memory"
+version = "0.1.0"
+description = "Stream responses from Claude with extended thinking"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.49.0",
+    "python-dotenv==1.0.1",
+    "openai==1.58.1",
+    "numpy==2.2.1",
+    "pydantic==2.10.4",
+]
+
+[tool.uv]
+# This is a simple script project, not a package
+
+
