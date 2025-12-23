@@ -14,9 +14,9 @@ const API_URL =
   "https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run";
 
 const DEMO_CONFIG = {
-  name: "Personal Assistant",
+  name: "Family Assistant",
   description:
-    "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
+    "Your assistant has access to sample memories and notes. Ask for help thinking through decisions.",
   placeholder: "Ask for advice or help planning...",
   suggestedQuestions: [
     "What should I get my dad for his birthday?",
@@ -27,7 +27,6 @@ const DEMO_CONFIG = {
 };
 
 export default function Demo() {
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -1164,7 +1163,6 @@ export default function Demo() {
                   <span className="text-[#666]">Streaming memory</span>
                 </div>
               </div>
-
             </motion.div>
           </motion.div>
         )}
