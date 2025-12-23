@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "framer-motion": "^11.0.0",
+    "posthog-js": "^1.310.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.11.0"
