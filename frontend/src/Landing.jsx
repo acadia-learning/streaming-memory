@@ -134,7 +134,7 @@ function EfficiencyGraph() {
 
   return (
     <div className="py-8">
-      <div className="text-xs text-[#999] mb-4 uppercase tracking-wide">
+      <div className="text-xs text-[#999] w-full text-center mb-4 uppercase tracking-wide">
         Context Size Over Generation (log scale)
       </div>
       <svg viewBox="0 0 400 200" className="w-full h-48">
