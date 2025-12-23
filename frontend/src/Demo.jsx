@@ -22,14 +22,23 @@ const SCENARIOS = {
     description:
       "You are Alex, a 5th grade student. Your tutor has months of memories about how you learn.",
     placeholder: "Ask about homework, math, or anything...",
-    suggestedQuestion: "Can you help me with fractions?",
+    suggestedQuestions: [
+      "Can you help me with fractions?",
+      "I don't understand long division",
+      "How do I study for my history test?",
+    ],
   },
   dad: {
     name: "Personal Assistant",
     description:
       "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
     placeholder: "Ask for advice or help planning...",
-    suggestedQuestion: "What should I get my dad for his birthday?",
+    suggestedQuestions: [
+      "What should I get my dad for his birthday?",
+      "Help me plan something special for my parents' anniversary",
+      "What's a good gift for my mom?",
+      "I need ideas for the family reunion",
+    ],
   },
 };
 
@@ -103,10 +112,11 @@ export default function Demo() {
     }
   }, [isStreaming]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isStreaming) return;
+  const sendMessage = async (directMessage = null) => {
+    const messageToSend = directMessage || input.trim();
+    if (!messageToSend || isStreaming) return;
 
-    const userMessage = input.trim();
+    const userMessage = messageToSend;
     setInput("");
     setIsStreaming(true);
     setWaitingForFirstToken(true);
@@ -548,14 +558,17 @@ export default function Demo() {
             </button>
           </div>
 
-          {/* Suggested question - centered */}
-          <div className="text-center mt-3">
-            <button
-              onClick={() => setInput(scenarioConfig.suggestedQuestion)}
-              className="text-sm text-[#999] hover:text-[#666] transition-colors"
-            >
-              Try: "{scenarioConfig.suggestedQuestion}"
-            </button>
+          {/* Suggested questions */}
+          <div className="flex flex-wrap justify-center gap-2 mt-4">
+            {scenarioConfig.suggestedQuestions.map((q, i) => (
+              <button
+                key={i}
+                onClick={() => sendMessage(q)}
+                className="text-sm text-[#666] bg-[#f5f5f5] hover:bg-[#eee] px-3 py-1.5 rounded-full transition-colors"
+              >
+                {q}
+              </button>
+            ))}
           </div>
         </div>
       </div>
