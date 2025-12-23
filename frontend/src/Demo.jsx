@@ -78,12 +78,30 @@ export default function Demo() {
     }
   };
 
-  // Auto-scroll during streaming
+  // Track if user is near bottom (for auto-scroll)
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
+
+  const handleScroll = () => {
+    if (!chatRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatRef.current;
+    // User is "near bottom" if within 100px of bottom
+    const nearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setUserScrolledUp(!nearBottom);
+  };
+
+  // Auto-scroll during streaming only if user hasn't scrolled up
   useEffect(() => {
-    if (isStreaming && chatRef.current) {
+    if (isStreaming && chatRef.current && !userScrolledUp) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [thinking, currentMemories, messages]);
+  }, [thinking, currentMemories, messages, userScrolledUp]);
+
+  // Reset scroll state when starting new message
+  useEffect(() => {
+    if (isStreaming) {
+      setUserScrolledUp(false);
+    }
+  }, [isStreaming]);
 
   const sendMessage = async () => {
     if (!input.trim() || isStreaming) return;
@@ -176,8 +194,19 @@ export default function Demo() {
                 setCurrentMemoryTokens(data.current_memory_tokens);
               if (data.rag_memory_tokens !== undefined)
                 setRagMemoryTokens(data.rag_memory_tokens);
-              if (data.all_memories_tokens !== undefined)
+              if (data.all_memories_tokens !== undefined) {
                 setAllMemoriesTokens(data.all_memories_tokens);
+                // Initialize live values from initial context
+                setLiveAllTokens(
+                  data.base_context_size + data.all_memories_tokens
+                );
+                setLiveRagTokens(
+                  data.base_context_size + (data.rag_memory_tokens || 0)
+                );
+                setLiveStreamingTokens(
+                  data.base_context_size + (data.current_memory_tokens || 0)
+                );
+              }
               if (data.unique_memories)
                 setUniqueMemoriesCount(data.unique_memories);
               if (data.token_history) {
@@ -212,10 +241,8 @@ export default function Demo() {
                 setGeneratedTokens(data.generated_tokens);
               if (data.streaming !== undefined)
                 setLiveStreamingTokens(data.streaming);
-              if (data.rag !== undefined)
-                setLiveRagTokens(data.rag);
-              if (data.all !== undefined)
-                setLiveAllTokens(data.all);
+              if (data.rag !== undefined) setLiveRagTokens(data.rag);
+              if (data.all !== undefined) setLiveAllTokens(data.all);
               if (data.token_history) {
                 latestTokenHistory = data.token_history;
                 setTokenHistory(data.token_history);
@@ -656,7 +683,11 @@ export default function Demo() {
       </div>
 
       {/* Chat History */}
-      <div ref={chatRef} className="flex-1 overflow-y-auto px-4">
+      <div
+        ref={chatRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4"
+      >
         <div className="max-w-2xl mx-auto py-6 space-y-6">
           {messages.map((msg, i) => {
             const isLastUserMessage =
@@ -768,22 +799,23 @@ export default function Demo() {
                           {liveAllTokens > 0 && (
                             <div className="bg-[#f8f8f8] rounded-lg p-2 space-y-1.5">
                               <div className="text-[#999]">
-                                {uniqueMemoriesCount} memories retrieved • {generatedTokens} tokens generated
+                                {uniqueMemoriesCount} memories retrieved •{" "}
+                                {generatedTokens} tokens generated
                               </div>
                               <div className="flex items-center justify-between text-[#666]">
-                                <span>All memories:</span>
+                                <span>Prompt Stuffing:</span>
                                 <span className="font-mono text-red-400">
                                   {liveAllTokens.toLocaleString()} tokens
                                 </span>
                               </div>
                               <div className="flex items-center justify-between text-[#666]">
-                                <span>RAG (retrieved once):</span>
+                                <span>Best-case RAG:</span>
                                 <span className="font-mono text-orange-400">
                                   {liveRagTokens.toLocaleString()} tokens
                                 </span>
                               </div>
                               <div className="flex items-center justify-between text-[#666]">
-                                <span>Streaming memory:</span>
+                                <span>Streaming Memory:</span>
                                 <span className="font-mono text-green-600">
                                   {liveStreamingTokens.toLocaleString()} tokens
                                 </span>
