@@ -135,7 +135,7 @@ function EfficiencyGraph() {
   return (
     <div className="py-8">
       <div className="text-xs text-[#999] w-full text-center mb-4 uppercase tracking-wide">
-        Context Size Over Generation (log scale)
+        Sample Context Size Over Generation
       </div>
       <svg viewBox="0 0 400 200" className="w-full h-48">
         {/* Grid */}
