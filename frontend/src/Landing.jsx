@@ -419,27 +419,44 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6">
-              Open questions
+              What makes this work
             </h2>
 
             <p className="text-lg text-[#666] mb-4">
-              This is early work. The demo functions, but we haven't measured
-              rigorously. How often does multi-hop retrieval actually help? What
-              latency does re-retrieval add? We don't have numbers.
+              For multi-hop retrieval to succeed, memories need to link to each
+              other semantically. When the model writes about "golf," that needs
+              to retrieve golf memories. Those memories need to contain concepts
+              that retrieve the next relevant memory in the chain.
             </p>
 
             <p className="text-lg text-[#666] mb-4">
-              The retrieval function matters more than expected. Embedding
-              similarity works but misses semantically non-obvious connections.
-              "Dad's birthday" and "Callaway driver" have low cosine similarity,
-              even though reasoning connects them. Better retrieval functions
-              would help significantly.
+              This means coverage matters. If there's a semantic gap—if "golf"
+              doesn't lead to "equipment" which leads to "driver"—the hop
+              doesn't happen. You need memories that bridge concepts, not just
+              memories that are individually relevant to the original query.
+            </p>
+
+            <p className="text-lg text-[#666] mb-4">
+              The retrieval function also matters. Embedding similarity catches
+              obvious connections but misses non-obvious ones. "Dad's birthday"
+              and "Callaway driver" have low cosine similarity even though
+              reasoning connects them. Better retrieval—or memories that
+              explicitly bridge those concepts—would help.
+            </p>
+
+            <p className="text-lg text-[#666] mb-4">
+              One thing we like: the streaming mechanism is independent of both
+              the query function and the memory pool structure. You can swap in
+              different retrieval methods (embeddings, learned retrievers,
+              hybrid search) without changing how streaming works. Same with
+              memory structure—flat list, graph, hierarchical summaries.
             </p>
 
             <p className="text-lg text-[#666]">
-              The optimal re-retrieval frequency is unclear. Every token? Every
-              10? Should old memories decay gradually? When does streaming
-              retrieval help versus add noise?
+              We're excited to try different combinations. What's the right
+              re-retrieval frequency? Which retrieval functions work best for
+              multi-hop? How should memories be structured to maximize coverage?
+              Open questions we're exploring.
             </p>
           </motion.div>
         </section>
