@@ -140,8 +140,15 @@ function EfficiencyGraph() {
       <svg viewBox="0 0 400 200" className="w-full h-48">
         {/* Grid */}
         <line x1="50" y1="30" x2="50" y2="170" stroke="#eee" strokeWidth="1" />
-        <line x1="50" y1="170" x2="380" y2="170" stroke="#eee" strokeWidth="1" />
-        
+        <line
+          x1="50"
+          y1="170"
+          x2="380"
+          y2="170"
+          stroke="#eee"
+          strokeWidth="1"
+        />
+
         {/* Log scale grid lines at 1k, 10k, 100k */}
         {[1000, 10000, 100000].map((val) => (
           <line
@@ -156,17 +163,37 @@ function EfficiencyGraph() {
         ))}
 
         {/* Y-axis labels (log scale) */}
-        <text x="45" y={logY(100000) + 4} textAnchor="end" className="text-[10px] fill-[#999]">
+        <text
+          x="45"
+          y={logY(100000) + 4}
+          textAnchor="end"
+          className="text-[10px] fill-[#999]"
+        >
           100k
         </text>
-        <text x="45" y={logY(10000) + 4} textAnchor="end" className="text-[10px] fill-[#999]">
+        <text
+          x="45"
+          y={logY(10000) + 4}
+          textAnchor="end"
+          className="text-[10px] fill-[#999]"
+        >
           10k
         </text>
-        <text x="45" y={logY(1000) + 4} textAnchor="end" className="text-[10px] fill-[#999]">
+        <text
+          x="45"
+          y={logY(1000) + 4}
+          textAnchor="end"
+          className="text-[10px] fill-[#999]"
+        >
           1k
         </text>
-        
-        <text x="215" y="190" textAnchor="middle" className="text-[10px] fill-[#999]">
+
+        <text
+          x="215"
+          y="190"
+          textAnchor="middle"
+          className="text-[10px] fill-[#999]"
+        >
           Generated tokens →
         </text>
 
@@ -180,7 +207,9 @@ function EfficiencyGraph() {
 
         {/* RAG - starts at ~3k, grows to ~15k */}
         <path
-          d={`M 50 ${logY(3000)} Q 150 ${logY(5000)} 220 ${logY(8000)} T 380 ${logY(15000)}`}
+          d={`M 50 ${logY(3000)} Q 150 ${logY(5000)} 220 ${logY(
+            8000
+          )} T 380 ${logY(15000)}`}
           fill="none"
           stroke="#fb923c"
           strokeWidth="2"
@@ -228,20 +257,30 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold text-[#1a1a1a] mb-6 leading-tight">
-              Memory that follows thought
+              Streaming Memory
             </h1>
             <p className="text-lg text-[#666] mb-4">
-              When you try to remember something, you don't load your entire
-              life into working memory. You start with what's relevant now, and
-              one thought leads to another.
+              For an LLM to remember things about you—how you learn, what you've
+              discussed, your preferences—those memories need to be accessible.
+              In practice, that means putting them in the context window.
             </p>
-            <p className="text-lg text-[#666]">
-              Today's AI memory systems don't work this way.
+            <p className="text-lg text-[#666] mb-8">
+              This works until you accumulate more memories than fit. After
+              months of conversation, you might have thousands. You have to
+              choose which ones to include for any given request—and that choice
+              matters.
             </p>
+
+            <Link
+              to="/demo"
+              className="inline-block px-8 py-4 bg-[#1a1a1a] text-white rounded-full font-medium hover:bg-[#333] transition-colors text-lg"
+            >
+              Try the Demo
+            </Link>
           </motion.div>
         </section>
 
-        {/* Section 1: The Problem with Storage */}
+        {/* Section 1: The Selection Problem */}
         <section className="py-12 border-t border-[#eee]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -250,25 +289,32 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6">
-              The problem with storage
+              When do you choose?
             </h2>
 
-            <p className="text-[#666] mb-4">
-              Human memory is associative. One thought activates related
-              memories, which activate others—a process the brain handles
-              through Hebbian plasticity. We access what we need, when we need
-              it.
+            <p className="text-lg text-[#666] mb-4">
+              The standard approach: before generating a response, embed the
+              user's message, search your memory store, and pull the top results
+              into context. Then generate.
             </p>
 
-            <p className="text-[#666] mb-4">
-              LLM context windows are finite. A year of conversation history
-              could be 100,000 tokens. We can't include everything.
+            <p className="text-lg text-[#666] mb-4">
+              This works when the query directly indicates which memories are
+              relevant. "What's my son's name?" will match memories about the
+              user's son.
             </p>
 
-            <p className="text-[#666]">
-              This creates a fundamental tension: memory is storage, but context
-              is bandwidth. We need a way to stream the right memories into a
-              limited window—and change that selection as thinking evolves.
+            <p className="text-lg text-[#666] mb-4">
+              But some queries require reasoning to determine what's relevant.
+              "What should I get my dad for his birthday?" doesn't obviously
+              match any specific memory. You'd need to first reason about what
+              he likes—which might lead to golf, which might lead to that time
+              he complained about his driver.
+            </p>
+
+            <p className="text-lg text-[#666]">
+              That chain of reasoning is what surfaces the right memory. If you
+              only retrieve once at the start, you never get there.
             </p>
 
             <BandwidthVisual />
@@ -284,49 +330,29 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6">
-              Current approaches
+              What people do now
             </h2>
 
-            <p className="text-[#666] mb-6">
-              Most systems select memories before reasoning begins.
+            <p className="text-lg text-[#666] mb-4">
+              One approach: include all memories upfront. This works if you have
+              a few hundred tokens of memory. With tens of thousands, you're
+              spending most of the context window on memory before generation
+              even starts.
             </p>
 
-            <p className="text-[#666] mb-4">
-              <strong className="text-[#1a1a1a]">Prompt stuffing</strong>{" "}
-              includes all relevant memories upfront. This works for short
-              histories. It fails for long relationships.
+            <p className="text-lg text-[#666] mb-4">
+              Another approach: give the model a tool to search memories, and
+              let it decide when to use it. This works, but adds overhead. The
+              model now has two tasks: solve the user's problem, and figure out
+              when and what to search for. Each search also adds latency.
             </p>
 
-            <p className="text-[#666] mb-6">
-              <strong className="text-[#1a1a1a]">Agent RAG</strong> lets the
-              model query its own memories. Better, but reasoning now splits
-              between the actual problem and retrieval mechanics. Context still
-              accumulates.
+            <p className="text-lg text-[#666]">
+              In both cases, memory selection is explicit—either you decide
+              upfront what to include, or the model explicitly decides during
+              reasoning. Neither allows memories to surface implicitly as a side
+              effect of thinking.
             </p>
-
-            <p className="text-[#666] font-medium">
-              Both approaches share a flaw: you must decide what's relevant
-              before you start thinking. But thinking is exactly when you
-              discover what you need.
-            </p>
-          </motion.div>
-        </section>
-
-        {/* CTA - Mid page */}
-        <section className="py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <Link
-              to="/demo?scenario=dad"
-              className="inline-block px-8 py-4 bg-[#1a1a1a] text-white rounded-full font-medium hover:bg-[#333] transition-colors text-lg"
-            >
-              Try the Demo
-            </Link>
           </motion.div>
         </section>
 
@@ -339,52 +365,45 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6">
-              Streaming memory
+              Retrieval during generation
             </h2>
 
-            <p className="text-[#666] mb-4">
-              We re-retrieve memories as the model generates.
+            <p className="text-lg text-[#666] mb-4">
+              Instead of retrieving memories once before generation, retrieve
+              continuously as the model generates. Every N tokens, take what the
+              model just wrote and use it to query the memory pool.
             </p>
 
-            <p className="text-[#666] mb-4">
-              Every N tokens, we take a window of recent output, query the
-              memory pool, and swap the active context. Old memories leave. New
-              ones enter.
+            <p className="text-lg text-[#666] mb-4">
+              If the model is writing about golf, golf-related memories appear.
+              When it shifts to equipment, equipment memories appear. The model
+              generates normally—we watch the output and update context in the
+              background.
             </p>
 
-            <p className="text-[#666] mb-4">
-              Let{" "}
-              <code className="bg-[#f5f5f5] px-1.5 py-0.5 rounded text-sm">
-                Q(text) → memories
-              </code>{" "}
-              be any retrieval function. Embedding similarity. Keyword search. A
-              learned reranker. The mechanism doesn't care. What matters is that
-              Q runs on ongoing reasoning, not just the initial prompt.
+            <p className="text-lg text-[#666] mb-4">
+              The key difference from agent RAG: we don't append memories to
+              context on each retrieval. There's a fixed slot in the prompt for
+              memories (e.g., 8). When we re-retrieve, we replace that slot
+              entirely. Old memories are removed, new ones take their place.
             </p>
 
-            <p className="text-[#666] mb-4">
-              This enables{" "}
-              <strong className="text-[#1a1a1a]">
-                multi-hop retrieval in a single turn
-              </strong>
-              . A question about "dad's birthday" retrieves memories about his
-              hobbies. Reasoning about golf retrieves memories about equipment
-              frustration. That retrieves the specific driver he mentioned
-              wanting.
+            <p className="text-lg text-[#666] mb-4">
+              Context size stays constant regardless of how many retrievals
+              occur. You can attach an arbitrarily large memory pool—thousands
+              of memories—and the context cost remains fixed. You're changing
+              which slice is visible, not growing the window.
             </p>
 
-            <p className="text-[#666] mb-4">
-              Each thought unlocks context that wasn't predictable from the
-              original query.
-            </p>
-
-            <p className="text-[#666]">
-              Context stays bounded. Bandwidth, not accumulation.
+            <p className="text-lg text-[#666]">
+              The retrieval function itself can be anything: embeddings, BM25, a
+              reranker. This approach is agnostic to how you retrieve—it only
+              changes when and how often.
             </p>
 
             {/* GIF placeholder */}
             <div className="my-8 bg-[#fafafa] border border-[#eee] rounded-lg p-8 text-center">
-              <div className="text-[#999] text-sm">[Demo GIF coming soon]</div>
+              <div className="text-xs text-[#999]">[Demo GIF coming soon]</div>
             </div>
 
             <EfficiencyGraph />
@@ -400,29 +419,28 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6">
-              Limitations
+              Open questions
             </h2>
 
-            <p className="text-[#666] mb-6">This is early work.</p>
-
-            <p className="text-[#666] mb-4">
-              We don't have formal evals yet. Multi-hop success rate, retrieval
-              precision, latency overhead—all need measurement.
+            <p className="text-lg text-[#666] mb-4">
+              This is early work. The demo functions, but we haven't measured
+              rigorously. How often does multi-hop retrieval actually help? What
+              latency does re-retrieval add? We don't have numbers.
             </p>
 
-            <p className="text-[#666] mb-4">
-              The query function Q matters. Our demo uses embedding similarity,
-              but different applications may need different approaches. We're
-              keeping the harness separate from the retrieval implementation.
+            <p className="text-lg text-[#666] mb-4">
+              The retrieval function matters more than expected. Embedding
+              similarity works but misses semantically non-obvious connections.
+              "Dad's birthday" and "Callaway driver" have low cosine similarity,
+              even though reasoning connects them. Better retrieval functions
+              would help significantly.
             </p>
 
-            <p className="text-[#666] mb-6">
-              Open questions remain. How often should we re-retrieve? How should
-              memory importance decay? When does streaming retrieval hurt more
-              than help?
+            <p className="text-lg text-[#666]">
+              The optimal re-retrieval frequency is unclear. Every token? Every
+              10? Should old memories decay gradually? When does streaming
+              retrieval help versus add noise?
             </p>
-
-            <p className="text-[#666]">We're working on it.</p>
           </motion.div>
         </section>
 
@@ -435,26 +453,17 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4">
-              See it in action
-            </h2>
-            <p className="text-[#666] mb-8">
-              Watch memories swap in real-time as the model reasons through a
-              problem.
+            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4">Try it</h2>
+            <p className="text-lg text-[#666] mb-8">
+              Watch the memory context change as the model generates.
             </p>
 
             <div className="flex justify-center gap-4 mb-8">
               <Link
-                to="/demo?scenario=dad"
+                to="/demo"
                 className="inline-block px-8 py-4 bg-[#1a1a1a] text-white rounded-full font-medium hover:bg-[#333] transition-colors"
               >
-                Gift Advisor Demo
-              </Link>
-              <Link
-                to="/demo?scenario=tutor"
-                className="inline-block px-8 py-4 bg-[#f5f5f5] text-[#1a1a1a] rounded-full font-medium hover:bg-[#eee] transition-colors"
-              >
-                AI Tutor Demo
+                Try the Demo
               </Link>
             </div>
 

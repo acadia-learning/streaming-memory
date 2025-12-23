@@ -8,44 +8,25 @@ import {
   AnimatePresence,
   motion,
 } from 'framer-motion';
-import {
-  Link,
-  useSearchParams,
-} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const API_URL =
   "https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run";
 
-const SCENARIOS = {
-  tutor: {
-    name: "AI Tutor",
-    description:
-      "You are Alex, a 5th grade student. Your tutor has months of memories about how you learn.",
-    placeholder: "Ask about homework, math, or anything...",
-    suggestedQuestions: [
-      "Can you help me with fractions?",
-      "I don't understand long division",
-      "How do I study for my history test?",
-    ],
-  },
-  dad: {
-    name: "Personal Assistant",
-    description:
-      "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
-    placeholder: "Ask for advice or help planning...",
-    suggestedQuestions: [
-      "What should I get my dad for his birthday?",
-      "Help me plan something special for my parents' anniversary",
-      "What's a good gift for my mom?",
-      "I need ideas for the family reunion",
-    ],
-  },
+const DEMO_CONFIG = {
+  name: "Personal Assistant",
+  description:
+    "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
+  placeholder: "Ask for advice or help planning...",
+  suggestedQuestions: [
+    "What should I get my dad for his birthday?",
+    "Help me plan something special for my parents' anniversary",
+    "What's a good gift for my mom?",
+    "I need ideas for the family reunion",
+  ],
 };
 
 export default function Demo() {
-  const [searchParams] = useSearchParams();
-  const scenario = searchParams.get("scenario") || "tutor";
-  const scenarioConfig = SCENARIOS[scenario] || SCENARIOS.tutor;
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -167,7 +148,7 @@ export default function Demo() {
           update_every_n: updateFrequency,
           max_memories: maxMemories,
           lookback_tokens: lookbackTokens,
-          scenario,
+          scenario: "dad",
         }),
       });
 
@@ -500,28 +481,11 @@ export default function Demo() {
         </div>
 
         <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">
-          {scenarioConfig.name}
+          {DEMO_CONFIG.name}
         </h1>
         <p className="text-[#999] text-sm mb-6 max-w-md text-center">
-          {scenarioConfig.description}
+          {DEMO_CONFIG.description}
         </p>
-
-        {/* Scenario switcher */}
-        <div className="flex gap-2 mb-6">
-          {Object.entries(SCENARIOS).map(([key, config]) => (
-            <Link
-              key={key}
-              to={`/demo?scenario=${key}`}
-              className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                scenario === key
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-[#f5f5f5] text-[#666] hover:bg-[#eee]"
-              }`}
-            >
-              {config.name}
-            </Link>
-          ))}
-        </div>
 
         <div className="w-full max-w-2xl">
           <div className="relative">
@@ -533,7 +497,7 @@ export default function Demo() {
               onKeyDown={(e) =>
                 e.key === "Enter" && !e.shiftKey && sendMessage()
               }
-              placeholder={scenarioConfig.placeholder}
+              placeholder={DEMO_CONFIG.placeholder}
               autoFocus
               className="w-full px-4 py-3 pr-12 rounded-full bg-[#f5f5f5] text-[#1a1a1a] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ddd]"
             />
@@ -560,7 +524,7 @@ export default function Demo() {
 
           {/* Suggested questions */}
           <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {scenarioConfig.suggestedQuestions.map((q, i) => (
+            {DEMO_CONFIG.suggestedQuestions.map((q, i) => (
               <button
                 key={i}
                 onClick={() => sendMessage(q)}
@@ -996,27 +960,59 @@ export default function Demo() {
                 </button>
               </div>
 
-              {/* SVG Graph */}
+              {/* SVG Graph (Log Scale) */}
               <div className="relative h-64 mt-4">
                 <svg
                   viewBox="0 0 500 200"
                   className="w-full h-full"
                   preserveAspectRatio="none"
                 >
-                  {/* Y-axis labels */}
+                  {/* Y-axis labels (log scale) */}
                   {(() => {
-                    const maxVal = Math.max(...tokenHistory.map((h) => h.all));
-                    const steps = [0, 0.25, 0.5, 0.75, 1];
-                    return steps.map((step, i) => (
-                      <text
-                        key={i}
-                        x="0"
-                        y={200 - step * 180 - 10}
-                        className="text-[8px] fill-[#999]"
-                      >
-                        {Math.round(maxVal * step).toLocaleString()}
-                      </text>
-                    ));
+                    const allValues = tokenHistory.flatMap((h) => [
+                      h.all,
+                      h.rag,
+                      h.streaming,
+                    ]);
+                    const minVal = Math.max(
+                      1,
+                      Math.min(...allValues.filter((v) => v > 0))
+                    );
+                    const maxVal = Math.max(...allValues);
+                    const logMin = Math.log10(minVal);
+                    const logMax = Math.log10(maxVal);
+
+                    // Generate nice log scale labels (powers of 10 and intermediate values)
+                    const labels = [];
+                    const minPow = Math.floor(logMin);
+                    const maxPow = Math.ceil(logMax);
+                    for (let pow = minPow; pow <= maxPow; pow++) {
+                      const val = Math.pow(10, pow);
+                      if (val >= minVal && val <= maxVal) {
+                        labels.push(val);
+                      }
+                    }
+                    // Ensure we have at least min and max
+                    if (!labels.includes(minVal)) labels.unshift(minVal);
+                    if (!labels.includes(maxVal)) labels.push(maxVal);
+
+                    return labels.map((val, i) => {
+                      const logVal = Math.log10(val);
+                      const yPos =
+                        190 - ((logVal - logMin) / (logMax - logMin)) * 180;
+                      return (
+                        <text
+                          key={i}
+                          x="0"
+                          y={yPos + 3}
+                          className="text-[8px] fill-[#999]"
+                        >
+                          {val >= 1000
+                            ? (val / 1000).toFixed(0) + "k"
+                            : val.toLocaleString()}
+                        </text>
+                      );
+                    });
                   })()}
 
                   {/* Grid lines */}
@@ -1036,48 +1032,94 @@ export default function Demo() {
                     stroke="#eee"
                     strokeWidth="1"
                   />
-                  {[0.25, 0.5, 0.75].map((step, i) => (
-                    <line
-                      key={i}
-                      x1="45"
-                      y1={190 - step * 180}
-                      x2="495"
-                      y2={190 - step * 180}
-                      stroke="#f5f5f5"
-                      strokeWidth="1"
-                    />
-                  ))}
-
-                  {/* Lines */}
+                  {/* Log scale grid lines */}
                   {(() => {
-                    const maxVal = Math.max(...tokenHistory.map((h) => h.all));
+                    const allValues = tokenHistory.flatMap((h) => [
+                      h.all,
+                      h.rag,
+                      h.streaming,
+                    ]);
+                    const minVal = Math.max(
+                      1,
+                      Math.min(...allValues.filter((v) => v > 0))
+                    );
+                    const maxVal = Math.max(...allValues);
+                    const logMin = Math.log10(minVal);
+                    const logMax = Math.log10(maxVal);
+                    const minPow = Math.floor(logMin);
+                    const maxPow = Math.ceil(logMax);
+
+                    const lines = [];
+                    for (let pow = minPow; pow <= maxPow; pow++) {
+                      const val = Math.pow(10, pow);
+                      if (val > minVal && val < maxVal) {
+                        const logVal = Math.log10(val);
+                        const yPos =
+                          190 - ((logVal - logMin) / (logMax - logMin)) * 180;
+                        lines.push(
+                          <line
+                            key={pow}
+                            x1="45"
+                            y1={yPos}
+                            x2="495"
+                            y2={yPos}
+                            stroke="#f5f5f5"
+                            strokeWidth="1"
+                          />
+                        );
+                      }
+                    }
+                    return lines;
+                  })()}
+
+                  {/* Lines (log scale) */}
+                  {(() => {
+                    const allValues = tokenHistory.flatMap((h) => [
+                      h.all,
+                      h.rag,
+                      h.streaming,
+                    ]);
+                    const minVal = Math.max(
+                      1,
+                      Math.min(...allValues.filter((v) => v > 0))
+                    );
+                    const maxVal = Math.max(...allValues);
+                    const logMin = Math.log10(minVal);
+                    const logMax = Math.log10(maxVal);
+                    const logRange = logMax - logMin || 1;
+
                     const xScale = 450 / (tokenHistory.length - 1 || 1);
-                    const yScale = 180 / maxVal;
+
+                    const toY = (val) => {
+                      const safeVal = Math.max(minVal, val);
+                      const logVal = Math.log10(safeVal);
+                      return 190 - ((logVal - logMin) / logRange) * 180;
+                    };
 
                     const allPath = tokenHistory
                       .map(
                         (h, i) =>
-                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${
-                            190 - h.all * yScale
-                          }`
+                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${toY(
+                            h.all
+                          )}`
                       )
                       .join(" ");
 
                     const ragPath = tokenHistory
                       .map(
                         (h, i) =>
-                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${
-                            190 - h.rag * yScale
-                          }`
+                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${toY(
+                            h.rag
+                          )}`
                       )
                       .join(" ");
 
                     const streamingPath = tokenHistory
                       .map(
                         (h, i) =>
-                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${
-                            190 - h.streaming * yScale
-                          }`
+                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${toY(
+                            h.streaming
+                          )}`
                       )
                       .join(" ");
 
