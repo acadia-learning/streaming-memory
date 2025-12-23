@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Landing from './Landing'
 
 const API_URL = 'https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run'
 
 export default function App() {
+  const [showDemo, setShowDemo] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -20,6 +22,11 @@ export default function App() {
   const lastMessageRef = useRef(null)
 
   const hasMessages = messages.length > 0
+  
+  // Show landing page first
+  if (!showDemo) {
+    return <Landing onStartDemo={() => setShowDemo(true)} />
+  }
 
   // Scroll to show new message near top when user sends
   const scrollToNewMessage = () => {
@@ -198,7 +205,17 @@ export default function App() {
   if (!hasMessages) {
     return (
       <div className="h-screen overflow-hidden bg-white flex flex-col items-center justify-center px-4">
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">Streaming Memory</h1>
+        <button
+          onClick={() => setShowDemo(false)}
+          className="absolute top-4 left-4 text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+        
+        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">Try the Demo</h1>
         <p className="text-[#999] mb-2">You are Alex, a 5th grade student.</p>
         <p className="text-[#999] text-sm mb-6 max-w-md text-center">Your tutor has been working with you for months and has built up memories about how you learn. Start a tutoring session.</p>
         
@@ -284,6 +301,19 @@ export default function App() {
   // Chat view - input at bottom
   return (
     <div className="h-screen overflow-hidden bg-white flex flex-col">
+      {/* Back button */}
+      <div className="flex-shrink-0 px-4 pt-3">
+        <button
+          onClick={() => { setShowDemo(false); setMessages([]) }}
+          className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+      </div>
+      
       {/* Chat History */}
       <div ref={chatRef} className="flex-1 overflow-y-auto px-4">
         <div className="max-w-2xl mx-auto py-6 space-y-6">
