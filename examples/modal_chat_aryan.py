@@ -348,7 +348,6 @@ HTML_PAGE = """
     timeout=600,
     scaledown_window=300,
     secrets=[modal.Secret.from_name("openai-secret")],
-    min_containers=1,  # Always keep 1 container running with model loaded
 )
 class TutorService:
     
@@ -465,6 +464,11 @@ class TutorService:
         async def home():
             return HTML_PAGE
         
+        @web_app.get("/health")
+        async def health():
+            """Health check endpoint for warming up the container."""
+            return {"status": "ok", "model": MODEL_ID}
+        
         @web_app.post("/chat/stream")
         async def chat_stream(request: Request):
             import time
@@ -472,6 +476,8 @@ class TutorService:
             data = await request.json()
             message = data.get("message", "")
             history = data.get("history", [])
+            update_every_n = data.get("update_every_n", 1)
+            max_memories = data.get("max_memories", 5)
             
             model = self.model
             tokenizer = self.tokenizer
@@ -493,7 +499,7 @@ class TutorService:
                 
                 # Initial retrieval
                 t1 = time.time()
-                memories = pool.retrieve(query, max_memories=5)
+                memories = pool.retrieve(query, max_memories=max_memories)
                 yield sse({'type': 'timing', 'stage': 'embed', 'ms': int((time.time() - t1) * 1000)})
                 
                 current_mem_contents = [m.content for m in memories]
@@ -513,7 +519,7 @@ class TutorService:
                 input_ids = tokenizer.encode(text, return_tensors="pt").to(model.device)
                 
                 max_tokens = 400
-                update_every_n = 1
+                # update_every_n comes from request
                 
                 all_tokens = []
                 in_thinking = False
@@ -568,7 +574,7 @@ class TutorService:
                         lookback_text = tokenizer.decode(all_tokens[-60:], skip_special_tokens=True)
                         new_query = message + " " + lookback_text
                         
-                        new_memories = pool.retrieve(new_query, max_memories=5)
+                        new_memories = pool.retrieve(new_query, max_memories=max_memories)
                         new_mem_contents = [m.content for m in new_memories]
                         
                         if set(new_mem_contents) != set(current_mem_contents):

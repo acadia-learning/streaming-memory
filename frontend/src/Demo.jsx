@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Landing from './Landing'
+import { Link } from 'react-router-dom'
 
 const API_URL = 'https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run'
 
-export default function App() {
-  const [showDemo, setShowDemo] = useState(false)
+export default function Demo() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -17,16 +16,12 @@ export default function App() {
   const [updateFrequency, setUpdateFrequency] = useState(1)
   const [maxMemories, setMaxMemories] = useState(5)
   const [showSettings, setShowSettings] = useState(false)
+  const [waitingForFirstToken, setWaitingForFirstToken] = useState(false)
   const chatRef = useRef(null)
   const inputRef = useRef(null)
   const lastMessageRef = useRef(null)
 
   const hasMessages = messages.length > 0
-  
-  // Show landing page first
-  if (!showDemo) {
-    return <Landing onStartDemo={() => setShowDemo(true)} />
-  }
 
   // Scroll to show new message near top when user sends
   const scrollToNewMessage = () => {
@@ -51,6 +46,7 @@ export default function App() {
     const userMessage = input.trim()
     setInput('')
     setIsStreaming(true)
+    setWaitingForFirstToken(true)
     setThinking('')
     setMemoryUpdates(0)
     setCurrentMemories([])
@@ -85,7 +81,7 @@ export default function App() {
       let fullThinking = ''
       let timeline = []
       let thinkingTimeline = []
-      let latestMemories = [] // Track memories locally, not via React state
+      let latestMemories = []
 
       while (true) {
         const { value, done } = await reader.read()
@@ -106,6 +102,7 @@ export default function App() {
             if (data.type === 'memories') {
               latestMemories = data.memories
               setCurrentMemories(data.memories)
+              setWaitingForFirstToken(false)
             } else if (data.type === 'memory_update') {
               latestMemories = data.memories
               setCurrentMemories(data.memories)
@@ -165,7 +162,6 @@ export default function App() {
   }
 
   const handleTokenLeave = () => {
-    // Delay hiding so user can move to tooltip
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredMemories(null)
     }, 150)
@@ -205,15 +201,15 @@ export default function App() {
   if (!hasMessages) {
     return (
       <div className="h-screen overflow-hidden bg-white flex flex-col items-center justify-center px-4">
-        <button
-          onClick={() => setShowDemo(false)}
+        <Link
+          to="/"
           className="absolute top-4 left-4 text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
-        </button>
+        </Link>
         
         <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">Try the Demo</h1>
         <p className="text-[#999] mb-2">You are Alex, a 5th grade student.</p>
@@ -303,15 +299,15 @@ export default function App() {
     <div className="h-screen overflow-hidden bg-white flex flex-col">
       {/* Back button */}
       <div className="flex-shrink-0 px-4 pt-3">
-        <button
-          onClick={() => { setShowDemo(false); setMessages([]) }}
+        <Link
+          to="/"
           className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
-        </button>
+        </Link>
       </div>
       
       {/* Chat History */}
@@ -333,8 +329,19 @@ export default function App() {
                 {/* Assistant message */}
                 {msg.role === 'assistant' && (
                   <div className="mb-4">
+                    {/* Cold start / waiting indicator */}
+                    {msg.streaming && waitingForFirstToken && (
+                      <div className="text-[#aaa] text-sm mb-3 pl-1 flex items-center gap-2">
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="italic">Waking up...</span>
+                      </div>
+                    )}
+                    
                     {/* Thinking */}
-                    {(msg.thinkingTimeline?.length > 0 || (msg.streaming && thinking)) && (
+                    {(msg.thinkingTimeline?.length > 0 || (msg.streaming && thinking && !waitingForFirstToken)) && (
                       <div className="text-[#aaa] text-sm mb-3 pl-1">
                         {msg.thinkingTimeline?.length > 0 ? (
                           renderTokenizedText(msg.thinkingTimeline, true)
@@ -510,3 +517,4 @@ export default function App() {
     </div>
   )
 }
+
