@@ -27,6 +27,11 @@ const DEMO_CONFIG = {
 };
 
 export default function Demo() {
+  // Warm up the API on page load
+  useEffect(() => {
+    fetch(`${API_URL}/health`).catch(() => {});
+  }, []);
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);

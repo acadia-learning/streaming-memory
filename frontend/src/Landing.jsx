@@ -9,15 +9,6 @@ import {
 } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
-const API_URL =
-  "https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run";
-
-// Warm up the API on page load
-function useWarmUp() {
-  useEffect(() => {
-    fetch(`${API_URL}/health`).catch(() => {});
-  }, []);
-}
 
 // Visual: Memory nodes flowing into context window
 function BandwidthVisual() {
@@ -244,7 +235,6 @@ function EfficiencyGraph() {
 }
 
 export default function Landing() {
-  useWarmUp();
 
   return (
     <div className="min-h-screen bg-white">
