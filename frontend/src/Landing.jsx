@@ -158,12 +158,19 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex gap-3"
           >
             <Link
-              to="/demo"
-              className="inline-block px-8 py-3 bg-[#1a1a1a] text-white rounded-full font-medium hover:bg-[#333] transition-colors"
+              to="/demo?scenario=tutor"
+              className="inline-block px-6 py-3 bg-[#1a1a1a] text-white rounded-full font-medium hover:bg-[#333] transition-colors"
             >
-              Try the Demo
+              Tutor Demo
+            </Link>
+            <Link
+              to="/demo?scenario=dad"
+              className="inline-block px-6 py-3 bg-[#f5f5f5] text-[#1a1a1a] rounded-full font-medium hover:bg-[#eee] transition-colors"
+            >
+              Gift Advisor Demo
             </Link>
           </motion.div>
         </section>

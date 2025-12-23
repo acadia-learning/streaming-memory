@@ -22,6 +22,7 @@ app = modal.App("streaming-memory")
 MODEL_ID = "Qwen/Qwen3-8B"
 
 memories_path = Path(__file__).parent / "memories.json"
+dad_memories_path = Path(__file__).parent / "dad_memories.json"
 package_path = Path(__file__).parent.parent / "streaming_memory"
 
 
@@ -47,11 +48,14 @@ image = (
     )
     .run_function(download_model)
     .add_local_file(memories_path, "/app/memories.json")
+    .add_local_file(dad_memories_path, "/app/dad_memories.json")
     .add_local_dir(package_path, "/app/streaming_memory")
 )
 
 
-SYSTEM_PROMPT = """You are an AI tutor who has been working with Alex, a Grade 5 student, for several months.
+SCENARIOS = {
+    "tutor": {
+        "system_prompt": """You are an AI tutor who has been working with Alex, a Grade 5 student, for several months.
 
 You have built up memories and insights about how he learns, what works for him, and your relationship.
 
@@ -59,7 +63,24 @@ When memories are provided, use them naturally to inform your responses. You kno
 
 Think step by step in <think>...</think> tags before responding.
 
-Speak as yourself - the tutor who has this history with Alex."""
+Speak as yourself - the tutor who has this history with Alex.""",
+        "memory_file": "/app/memories.json",
+        "memory_prefix": "[My memories from working with Alex:]",
+    },
+    "dad": {
+        "system_prompt": """You are a helpful personal assistant who has access to the user's memories and notes.
+
+You help them think through decisions by drawing on what you know about their life, relationships, and past experiences.
+
+When memories are provided, use them naturally to inform your responses. Make connections between different memories when relevant.
+
+Think step by step in <think>...</think> tags before responding.
+
+Be warm and helpful, like a thoughtful friend who knows them well.""",
+        "memory_file": "/app/dad_memories.json",
+        "memory_prefix": "[User's memories and notes:]",
+    },
+}
 
 
 HTML_PAGE = """
@@ -389,49 +410,52 @@ class TutorService:
         
         self.embed_fn = embed
         
-        self.pool = MemoryPool(
-            embed_fn=embed,
-            softmax_temperature=0.15,
-            diversity_weight=0.5,
-            association_weight=0.5,
-        )
+        # Create a pool for each scenario
+        self.pools = {}
         
-        # Load memories
-        with open("/app/memories.json") as f:
-            memories = json.load(f)
-        
-        # Pre-embed all memories at startup
-        print(f"📚 Pre-embedding {len(memories)} memories...")
-        memory_contents = [m["content"] for m in memories]
-        
-        # Batch embed all memories (OpenAI supports batching)
-        batch_size = 50
-        for i in range(0, len(memory_contents), batch_size):
-            batch = memory_contents[i:i + batch_size]
-            response = self.openai_client.embeddings.create(
-                model="text-embedding-3-small",
-                input=batch,
-            )
-            for j, emb_data in enumerate(response.data):
-                self.embed_cache[batch[j]] = emb_data.embedding
-            print(f"  Embedded {min(i + batch_size, len(memory_contents))}/{len(memory_contents)}")
-        
-        # Now add memories to pool (embeddings are cached, so this is instant)
-        for mem in memories:
-            created_str = mem.get("created_at", "")
-            try:
-                dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
-                created_at = dt.replace(tzinfo=None)
-            except:
-                created_at = datetime.now()
+        for scenario_name, scenario_config in SCENARIOS.items():
+            print(f"📚 Loading {scenario_name} memories...")
             
-            self.pool.add(
-                content=mem["content"],
-                emotional_intensity=mem.get("emotional_intensity", 0.5),
-                created_at=created_at,
+            pool = MemoryPool(
+                embed_fn=embed,
+                softmax_temperature=0.15,
+                diversity_weight=0.5,
+                association_weight=0.5,
             )
+            
+            with open(scenario_config["memory_file"]) as f:
+                memories = json.load(f)
+            
+            # Batch embed all memories
+            memory_contents = [m["content"] for m in memories]
+            batch_size = 50
+            for i in range(0, len(memory_contents), batch_size):
+                batch = memory_contents[i:i + batch_size]
+                response = self.openai_client.embeddings.create(
+                    model="text-embedding-3-small",
+                    input=batch,
+                )
+                for j, emb_data in enumerate(response.data):
+                    self.embed_cache[batch[j]] = emb_data.embedding
+            
+            # Add memories to pool
+            for mem in memories:
+                created_str = mem.get("created_at", "")
+                try:
+                    dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+                    created_at = dt.replace(tzinfo=None)
+                except:
+                    created_at = datetime.now()
+                
+                pool.add(
+                    content=mem["content"],
+                    emotional_intensity=mem.get("emotional_intensity", 0.5),
+                    created_at=created_at,
+                )
+            
+            self.pools[scenario_name] = pool
+            print(f"  ✅ Loaded {len(memories)} {scenario_name} memories")
         
-        print(f"✅ All {len(memories)} memories loaded and pre-embedded!")
         print("🟢 Container ready - responses will be fast!")
     
     @modal.asgi_app()
@@ -452,10 +476,10 @@ class TutorService:
             allow_headers=["*"],
         )
         
-        def format_memories(memories) -> str:
+        def format_memories(memories, prefix: str) -> str:
             if not memories:
                 return ""
-            lines = ["[My memories from working with Alex:]"]
+            lines = [prefix]
             for mem in memories:
                 lines.append(f"- {mem.content}")
             return "\n".join(lines)
@@ -478,10 +502,17 @@ class TutorService:
             history = data.get("history", [])
             update_every_n = data.get("update_every_n", 1)
             max_memories = data.get("max_memories", 5)
+            lookback_tokens = data.get("lookback_tokens", 60)
+            scenario_name = data.get("scenario", "tutor")
+            
+            # Get scenario config
+            scenario = SCENARIOS.get(scenario_name, SCENARIOS["tutor"])
+            system_prompt = scenario["system_prompt"]
+            memory_prefix = scenario["memory_prefix"]
             
             model = self.model
             tokenizer = self.tokenizer
-            pool = self.pool
+            pool = self.pools[scenario_name]
             
             def generate():
                 # SSE format: "data: {...}\n\n"
@@ -506,9 +537,9 @@ class TutorService:
                 yield sse({'type': 'memories', 'memories': current_mem_contents})
                 
                 # Build prompt
-                memory_context = format_memories(memories)
+                memory_context = format_memories(memories, memory_prefix)
                 messages = [
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "system", "content": memory_context},
                 ]
                 for h in history[-6:]:
@@ -571,7 +602,7 @@ class TutorService:
                             break
                         
                         # Re-retrieve memories
-                        lookback_text = tokenizer.decode(all_tokens[-60:], skip_special_tokens=True)
+                        lookback_text = tokenizer.decode(all_tokens[-lookback_tokens:], skip_special_tokens=True)
                         new_query = message + " " + lookback_text
                         
                         new_memories = pool.retrieve(new_query, max_memories=max_memories)
@@ -590,9 +621,9 @@ class TutorService:
                             
                             # Raw token concatenation fix
                             current_mem_contents = new_mem_contents
-                            memory_context = format_memories(new_memories)
+                            memory_context = format_memories(new_memories, memory_prefix)
                             messages = [
-                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "system", "content": system_prompt},
                                 {"role": "system", "content": memory_context},
                             ]
                             for h in history[-6:]:

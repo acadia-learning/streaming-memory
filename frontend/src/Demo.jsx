@@ -1,10 +1,29 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 const API_URL = 'https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run'
 
+const SCENARIOS = {
+  tutor: {
+    name: "AI Tutor",
+    description: "You are Alex, a 5th grade student. Your tutor has months of memories about how you learn.",
+    placeholder: "Ask about homework, math, or anything...",
+    suggestedQuestion: "Can you help me with fractions?",
+  },
+  dad: {
+    name: "Personal Assistant", 
+    description: "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
+    placeholder: "Ask for advice or help planning...",
+    suggestedQuestion: "What should I get my dad for his birthday?",
+  },
+}
+
 export default function Demo() {
+  const [searchParams] = useSearchParams()
+  const scenario = searchParams.get('scenario') || 'tutor'
+  const scenarioConfig = SCENARIOS[scenario] || SCENARIOS.tutor
+  
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -15,6 +34,7 @@ export default function Demo() {
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
   const [updateFrequency, setUpdateFrequency] = useState(1)
   const [maxMemories, setMaxMemories] = useState(5)
+  const [lookbackTokens, setLookbackTokens] = useState(60)
   const [showSettings, setShowSettings] = useState(false)
   const [waitingForFirstToken, setWaitingForFirstToken] = useState(false)
   const chatRef = useRef(null)
@@ -71,7 +91,7 @@ export default function Demo() {
       const response = await fetch(`${API_URL}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, history, update_every_n: updateFrequency, max_memories: maxMemories })
+        body: JSON.stringify({ message: userMessage, history, update_every_n: updateFrequency, max_memories: maxMemories, lookback_tokens: lookbackTokens, scenario })
       })
 
       const reader = response.body.getReader()
@@ -211,9 +231,25 @@ export default function Demo() {
           Back
         </Link>
         
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">Try the Demo</h1>
-        <p className="text-[#999] mb-2">You are Alex, a 5th grade student.</p>
-        <p className="text-[#999] text-sm mb-6 max-w-md text-center">Your tutor has been working with you for months and has built up memories about how you learn. Start a tutoring session.</p>
+        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">{scenarioConfig.name}</h1>
+        <p className="text-[#999] text-sm mb-6 max-w-md text-center">{scenarioConfig.description}</p>
+        
+        {/* Scenario switcher */}
+        <div className="flex gap-2 mb-6">
+          {Object.entries(SCENARIOS).map(([key, config]) => (
+            <Link
+              key={key}
+              to={`/demo?scenario=${key}`}
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                scenario === key 
+                  ? 'bg-[#1a1a1a] text-white' 
+                  : 'bg-[#f5f5f5] text-[#666] hover:bg-[#eee]'
+              }`}
+            >
+              {config.name}
+            </Link>
+          ))}
+        </div>
         
         <button
           onClick={() => setShowSettings(!showSettings)}
@@ -262,6 +298,21 @@ export default function Demo() {
                     <span className="w-16 text-[#999] text-right">{maxMemories}</span>
                   </div>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#666]">Lookback window</span>
+                  <div className="flex items-center gap-3 ml-12">
+                    <input
+                      type="range"
+                      min="10"
+                      max="150"
+                      step="10"
+                      value={lookbackTokens}
+                      onChange={e => setLookbackTokens(Number(e.target.value))}
+                      className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                    />
+                    <span className="w-16 text-[#999] text-right">{lookbackTokens} tokens</span>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -275,7 +326,7 @@ export default function Demo() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              placeholder="Message..."
+              placeholder={scenarioConfig.placeholder}
               autoFocus
               className="w-full px-4 py-3 pr-12 rounded-full bg-[#f5f5f5] text-[#1a1a1a] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ddd]"
             />
@@ -289,6 +340,14 @@ export default function Demo() {
               </svg>
             </button>
           </div>
+          
+          {/* Suggested question */}
+          <button
+            onClick={() => setInput(scenarioConfig.suggestedQuestion)}
+            className="mt-3 text-sm text-[#999] hover:text-[#666] transition-colors"
+          >
+            Try: "{scenarioConfig.suggestedQuestion}"
+          </button>
         </div>
       </div>
     )
@@ -450,6 +509,22 @@ export default function Demo() {
                         className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
                       />
                       <span className="w-16 text-[#999] text-right">{maxMemories}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">Lookback window</span>
+                    <div className="flex items-center gap-3 ml-12">
+                      <input
+                        type="range"
+                        min="10"
+                        max="150"
+                        step="10"
+                        value={lookbackTokens}
+                        onChange={e => setLookbackTokens(Number(e.target.value))}
+                        disabled={isStreaming}
+                        className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                      />
+                      <span className="w-16 text-[#999] text-right">{lookbackTokens} tokens</span>
                     </div>
                   </div>
                 </div>
