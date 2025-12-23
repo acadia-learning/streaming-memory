@@ -55,7 +55,7 @@ export default function Demo() {
   const [memoryUpdates, setMemoryUpdates] = useState(0);
   const [hoveredMemories, setHoveredMemories] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
-  const [updateFrequency, setUpdateFrequency] = useState(1);
+  const [updateFrequency, setUpdateFrequency] = useState(10);
   const [maxMemories, setMaxMemories] = useState(8);
   const [lookbackTokens, setLookbackTokens] = useState(60);
   const [baseContextSize, setBaseContextSize] = useState(0);
