@@ -220,31 +220,31 @@ export default function App() {
               exit={{ opacity: 0, height: 0 }}
               className="mb-6 overflow-hidden"
             >
-              <div className="bg-[#fafafa] rounded-lg p-4 space-y-4 text-xs">
-                <div className="flex items-center justify-between">
+                <div className="bg-[#fafafa] rounded-lg p-4 space-y-4 text-xs">
+                <div className="flex items-center justify-between gap-8">
                   <span className="text-[#666]">Memory update frequency</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <input
                       type="range"
                       min="1"
                       max="20"
                       value={updateFrequency}
                       onChange={e => setUpdateFrequency(Number(e.target.value))}
-                      className="w-20 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                      className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
                     />
                     <span className="w-16 text-[#999] text-right">{updateFrequency} token{updateFrequency > 1 ? 's' : ''}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-8">
                   <span className="text-[#666]">Max memories in context</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <input
                       type="range"
                       min="1"
                       max="15"
                       value={maxMemories}
                       onChange={e => setMaxMemories(Number(e.target.value))}
-                      className="w-20 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                      className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
                     />
                     <span className="w-16 text-[#999] text-right">{maxMemories}</span>
                   </div>
@@ -367,8 +367,7 @@ export default function App() {
           <div className="flex justify-center mb-2">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              disabled={isStreaming}
-              className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
             >
               <svg className={`w-3 h-3 transition-transform ${showSettings ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -386,9 +385,9 @@ export default function App() {
                 className="mb-3 overflow-hidden"
               >
                 <div className="bg-[#fafafa] rounded-lg p-3 space-y-3 text-xs">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-8">
                     <span className="text-[#666]">Memory update frequency</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <input
                         type="range"
                         min="1"
@@ -396,14 +395,14 @@ export default function App() {
                         value={updateFrequency}
                         onChange={e => setUpdateFrequency(Number(e.target.value))}
                         disabled={isStreaming}
-                        className="w-20 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                        className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
                       />
                       <span className="w-16 text-[#999] text-right">{updateFrequency} token{updateFrequency > 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-8">
                     <span className="text-[#666]">Max memories in context</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <input
                         type="range"
                         min="1"
@@ -411,7 +410,7 @@ export default function App() {
                         value={maxMemories}
                         onChange={e => setMaxMemories(Number(e.target.value))}
                         disabled={isStreaming}
-                        className="w-20 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                        className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
                       />
                       <span className="w-16 text-[#999] text-right">{maxMemories}</span>
                     </div>
