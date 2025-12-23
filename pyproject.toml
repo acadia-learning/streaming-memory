@@ -1,17 +1,37 @@
 [project]
 name = "streaming-memory"
 version = "0.1.0"
-description = "Stream responses from Claude with extended thinking"
+description = "Hebbian-inspired dynamic memory system for LLM context injection"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "anthropic>=0.49.0",
-    "python-dotenv==1.0.1",
-    "openai==1.58.1",
-    "numpy==2.2.1",
-    "pydantic==2.10.4",
+    "numpy>=2.0",
+    "pydantic>=2.0",
+    "openai>=1.0",
+    "python-dotenv>=1.0",
+    "modal>=1.3.0.post1",
 ]
 
-[tool.uv]
-# This is a simple script project, not a package
+[project.optional-dependencies]
+modal = [
+    "modal>=0.64",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["streaming_memory"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]

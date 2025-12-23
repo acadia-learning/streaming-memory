@@ -1,242 +1,214 @@
 # Streaming Memory
 
-An AI chat agent with long-term memory powered by semantic embeddings and multi-factor retrieval.
+A Hebbian-inspired memory system for LLMs that dynamically retrieves and updates memories during generation. Memories are re-evaluated every token, allowing the model's context to evolve as it thinks.
 
-## Architecture
+![Demo](https://img.shields.io/badge/demo-live-brightgreen)
+![Modal](https://img.shields.io/badge/backend-Modal-purple)
+![Vercel](https://img.shields.io/badge/frontend-Vercel-black)
+
+## Live Demo
+
+**Frontend:** [streaming-memory.vercel.app](https://streaming-memory.vercel.app)
+
+## How It Works
 
 ```
 User Input
     ↓
-Query Long-term Memory (semantic + recency + emotion + frequency)
+Embed query → Retrieve top-k memories
     ↓
-Inject relevant memories into context (with timestamps)
+Inject memories into LLM context
     ↓
-Stream response with extended thinking (Claude Opus 4.5)
+Generate tokens...
     ↓
-Ingest all experiences into cache
+Every N tokens: re-embed recent output → re-retrieve memories
     ↓
-Background: LLM creates memory blocks from cache
+If memories changed: rebuild context, continue generation
+    ↓
+Hebbian update: strengthen associations between co-retrieved memories
 ```
 
-## Features
+### Key Features
 
-- **Extended Thinking**: Claude Opus 4.5 with visible thinking stream
-- **Semantic Search**: OpenAI embeddings (`text-embedding-3-small`)
-- **Multi-factor Retrieval**: Memories ranked by composite score
-- **First-person Memories**: Agent remembers from its own perspective
-- **Emotional Intensity**: Memories tagged with surprise, arousal, control
-- **Temporal Awareness**: Agent sees current time and memory ages
-- **Save/Load**: Persist and restore memories to/from JSON
-- **Benchmarking**: Process existing conversation logs (JSONL format)
+- **Dynamic Memory Injection**: Memories are re-queried during generation, not just at the start
+- **Hebbian Learning**: Memories that are retrieved together strengthen their association
+- **Soft Scoring**: No hard thresholds - semantic similarity gates all other factors
+- **Query Diversity**: Prevents "generalist" memories from dominating by normalizing by query diversity
+- **Real-time Visualization**: See which memories are active at each token
 
-## Setup
+## Architecture
+
+### Memory Scoring
+
+Each memory is scored by combining:
+
+| Factor | Description |
+|--------|-------------|
+| **Semantic Similarity** | Cosine similarity² (squared to make it multiplicative) |
+| **Recency** | Exponential decay from last retrieval |
+| **Frequency** | How often retrieved (normalized by average) |
+| **Emotional Intensity** | Surprise/importance factor |
+| **Hebbian Associations** | Strength of connections to other retrieved memories |
+| **Query Specificity** | Penalizes memories retrieved by many different queries |
+
+```python
+# Core scoring formula
+emb_sim = cosine_similarity(query, memory) ** 2  # Squared = multiplicative gate
+hebbian_boost = recency + frequency + emotion + associations
+multiplier = 1 + tanh(hebbian_boost)  # Soft saturation
+score = emb_sim * multiplier
+```
+
+### Selection
+
+1. Compute scores for all memories
+2. Apply softmax with temperature
+3. Sample memories weighted by probability
+4. Apply diversity penalty (MMR-style) to avoid redundancy
+5. Repeat until token budget filled
+
+## Project Structure
+
+```
+streaming-memory/
+├── streaming_memory/        # Core memory system
+│   ├── memory.py           # MemoryPool, Memory, Connection classes
+│   └── sample_data.py      # Sample memories for testing
+├── examples/
+│   ├── modal_chat.py       # Modal deployment with Qwen3-8B
+│   ├── memories.json       # Pre-parsed tutor memories
+│   └── chat_openai.py      # OpenAI-based chat example
+├── frontend/               # React + Vite + Tailwind
+│   └── src/App.jsx        # Main chat UI
+└── pyproject.toml
+```
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- [uv](https://github.com/astral-sh/uv) for Python dependencies
+- [Modal](https://modal.com) account for GPU inference
+- OpenAI API key (for embeddings)
+
+### Local Development
 
 ```bash
-# Install dependencies
+# Clone
+git clone https://github.com/acadia-learning/streaming-memory
+cd streaming-memory
+
+# Install Python deps
 uv sync
 
-# Set up API keys in .env
-ANTHROPIC_API_KEY=your-anthropic-key
-OPENAI_API_KEY=your-openai-key
+# Set up environment
+cp .env.example .env
+# Add your OPENAI_API_KEY
+
+# Run OpenAI example
+uv run python examples/chat_openai.py
 ```
 
-## Running
+### Deploy to Modal
 
 ```bash
-# Start fresh
-uv run python chat.py
+# Install Modal CLI
+pip install modal
 
-# Load existing memories
-uv run python chat.py --load memories.json
+# Authenticate
+modal setup
 
-# Auto-save on exit
-uv run python chat.py -l memories.json -s memories.json
+# Create secret with OpenAI key
+modal secret create openai-secret OPENAI_API_KEY=sk-...
+
+# Deploy
+uv run modal deploy examples/modal_chat.py
 ```
 
-### Commands
+### Frontend Development
 
-| Command | Description |
-|---------|-------------|
-| `stats` | Show memory statistics |
-| `working` | Show working memory (messages array) |
-| `memories` | Show all memory blocks |
-| `clear` | Clear both memories |
-| `clear working` | Clear only working memory |
-| `clear ltm` | Clear only long-term memory |
-| `save <path>` | Save memories to file |
-| `exit` | Quit |
+```bash
+cd frontend
+yarn install
+yarn dev
+```
 
-## Benchmarking with Existing Data
+Update `API_URL` in `src/App.jsx` to point to your Modal endpoint.
 
-Process existing conversation logs to build memories:
+### Deploy Frontend to Vercel
+
+```bash
+cd frontend
+npx vercel --prod
+```
+
+## Configuration
+
+### Memory Settings (via UI)
+
+| Setting | Range | Description |
+|---------|-------|-------------|
+| **Update Frequency** | 1-20 tokens | How often to re-query memories |
+| **Max Memories** | 1-15 | Maximum memories in context |
+
+### Pool Parameters
 
 ```python
-from memory import LongTermMemory, load_raw_jsonl
-
-# Load conversation data (JSONL format)
-chunks = load_raw_jsonl("conversations.jsonl", limit=500)
-
-# Process into memories (uses Haiku by default - cheap & fast)
-ltm = LongTermMemory()
-memories = ltm.process_chunk_stream(chunks, batch_size=100)
-
-# Save for later use
-ltm.save("memories.json")
-
-# Load and chat
-ltm = LongTermMemory.from_file("memories.json")
-results = ltm.query("What did the user struggle with?")
-```
-
-### JSONL Format
-
-The loader expects JSONL with `message_data` objects:
-
-```json
-{"timestamp": "...", "message_data": {"type": "message", "role": "user", "content": "Hello!"}}
-{"timestamp": "...", "message_data": {"type": "message", "role": "assistant", "content": "Hi there!"}}
-{"timestamp": "...", "message_data": {"type": "function_call", "name": "search", "arguments": "{...}"}}
-{"timestamp": "...", "message_data": {"type": "function_call_output", "output": "{...}"}}
-```
-
-### Model Configuration
-
-Memory extraction uses Haiku 4.5 by default ($1/M in, $5/M out):
-
-```python
-# Default (Haiku - cheap & fast)
-ltm = LongTermMemory()
-
-# Or specify model
-ltm = LongTermMemory(memory_model="claude-sonnet-4-20250514")  # Balanced
-ltm = LongTermMemory(memory_model="claude-opus-4-5-20251101")  # Best quality
-```
-
-## Memory System
-
-### What Each Memory Stores
-
-```python
-MemoryBlock(
-    summary="I learned the user loves hiking in Utah",
-    embedding=[...],           # 1536-dim vector
-    frequency=3,               # Times surfaced
-    created_at=datetime(...),  # When created
-    emotions=EmotionIntensity(
-        surprise=0.2,          # How unexpected (0-1)
-        arousal=0.5,           # How stimulating (0-1)
-        control=0.6            # Sense of agency (0-1)
-    )
+MemoryPool(
+    embed_fn=embed,
+    softmax_temperature=0.15,    # Lower = more deterministic
+    diversity_weight=0.5,        # Penalty for similar memories
+    association_weight=0.5,      # Hebbian connection strength
 )
 ```
 
-### Multi-factor Scoring
+## API
 
-Memories are ranked by composite score combining:
+### POST `/chat/stream`
 
-| Factor | Weight | Function |
-|--------|--------|----------|
-| **Similarity** | 35% | Cosine similarity of embeddings |
-| **Emotion** | 30% | Power law: `x^5` (high emotions weighted exponentially) |
-| **Recency** | 25% | Exponential decay: `e^(-t/τ)` where τ=1 hour |
-| **Frequency** | 10% | Logarithmic: `log(1+f)/log(1+max)` |
-
-### Recency Decay
-
-| Time Ago | Score |
-|----------|-------|
-| Just now | 1.00 |
-| 30 min | 0.61 |
-| 1 hour | 0.37 |
-| 2 hours | 0.14 |
-
-### Emotion Power Law
-
-| Avg Emotion | Score |
-|-------------|-------|
-| 0.5 | 0.03 |
-| 0.7 | 0.17 |
-| 0.9 | 0.59 |
-| 1.0 | 1.00 |
-
-## Memory Creation
-
-After each response, a background process:
-
-1. Takes the cache (user input, thinking, response)
-2. Sends to LLM with Pydantic schema (Haiku by default)
-3. Extracts first-person memories with emotional ratings
-4. Embeds summaries with OpenAI
-5. Stores as memory blocks
-
-### Example Memory
-
-```
-🧠 NEW MEMORY CREATED:
-   Summary: I learned that the user loves the mountains near their house in Utah
-   Emotions: surprise=0.20, arousal=0.50, control=0.60
-   Created: 11:32:12
+```json
+{
+  "message": "Can you help me with fractions?",
+  "history": [],
+  "update_every_n": 1,
+  "max_memories": 5
+}
 ```
 
-## Context Injection
-
-Before responding, memories are queried and injected:
+Returns Server-Sent Events:
 
 ```
-Current time: 2024-12-09 11:45:32
-
-You have the following relevant memories from past experiences:
-- [30s ago] I learned that the user loves the mountains in Utah
-- [2m ago] I learned that the user owns a house in Utah
-- [5m ago] I was greeted by a user who said 'hi'
+data: {"type": "memories", "memories": ["...", "..."]}
+data: {"type": "thinking", "t": "Let"}
+data: {"type": "thinking", "t": " me"}
+data: {"type": "memory_update", "memories": [...], "added": [...], "removed": [...]}
+data: {"type": "token", "t": "I"}
+data: {"type": "token", "t": "'d"}
+data: {"type": "done"}
 ```
 
-## API Reference
+## Memory Format
 
-### LongTermMemory
-
-```python
-# Initialize
-ltm = LongTermMemory(default_top_k=10, memory_model="claude-haiku-4-5-20251001")
-
-# Ingest content
-ltm.ingest(content, entry_type)  # "user_input" | "thinking" | "response_text"
-ltm.ingest_batch([(content, type), ...])
-
-# Process cache into memories
-ltm.process_cache_async()  # Background (non-blocking)
-ltm.process_cache_sync()   # Foreground (blocking, returns memories)
-
-# Query memories
-results = ltm.query("search text", top_k=5)  # Returns List[QueryResult]
-
-# Convenience methods for benchmarking
-ltm.ingest_interaction(user_input, assistant_response, thinking=None)
-ltm.ingest_interactions([{"user": "...", "assistant": "..."}])
-ltm.process_chunk_stream(chunks, batch_size=10)
-
-# Persistence
-ltm.save("memories.json")
-ltm.load("memories.json")
-ltm = LongTermMemory.from_file("memories.json")
-
-# Inspection
-ltm.get_stats()
-ltm.get_all_memories()
-ltm.clear()
+```json
+{
+  "content": "I've noticed Alex benefits from step-by-step scaffolding...",
+  "type": "what_works",
+  "subject": "math",
+  "emotional_intensity": 0.5,
+  "created_at": "2025-11-11T01:02:35.309703+00:00"
+}
 ```
 
-### Loaders
+Types: `what_works`, `pattern`, `current_state`, `insight`, `relationship`, `parent`, `behavior`
 
-```python
-from memory import load_raw_jsonl, load_chunks_from_jsonl, load_interactions_from_jsonl
+## Tech Stack
 
-# Load all entries (production behavior)
-chunks = load_raw_jsonl("data.jsonl", limit=500)
+- **Backend**: Modal (GPU inference), Qwen3-8B, FastAPI
+- **Embeddings**: OpenAI `text-embedding-3-small`
+- **Frontend**: React 19, Vite, Tailwind CSS, Framer Motion
+- **Hosting**: Modal (backend), Vercel (frontend)
 
-# Load filtered by role
-chunks = load_chunks_from_jsonl("data.jsonl", include_roles=["user", "assistant"])
+## License
 
-# Load as interaction pairs
-interactions = load_interactions_from_jsonl("data.jsonl", limit=100)
-```
+MIT

@@ -1,0 +1,1379 @@
+[
+  {
+    "content": "I've noticed that when breaking down perimeter problems into smaller parts, Alex is able to progress more accurately, indicating that this strategy is effective for him.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-10",
+    "source_hour": 16,
+    "created_at": "2025-11-11T01:02:35.309703+00:00"
+  },
+  {
+    "content": "I observed that Alex experiences confusion with place value, particularly when solving word problems, which suggests he may need additional support in this area.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-10",
+    "source_hour": 16,
+    "created_at": "2025-11-11T01:02:35.309703+00:00"
+  },
+  {
+    "content": "I've learned that Alex shows growing proficiency in decimal multiplication but still struggles with execution, indicating a need for more practice with similar problems.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-10",
+    "source_hour": 16,
+    "created_at": "2025-11-11T01:02:35.309703+00:00"
+  },
+  {
+    "content": "I've noticed that Alex benefits from slow, step-by-step scaffolding and repetition, which helps him grasp concepts more effectively.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-10",
+    "source_hour": 16,
+    "created_at": "2025-11-11T01:02:35.309703+00:00"
+  },
+  {
+    "content": "He gets frustrated when he miscomputes decimal multiplication, indicating he may need more practice to build confidence in this area.",
+    "type": "behavior",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-11",
+    "source_hour": 11,
+    "created_at": "2025-11-11T20:06:31.287766+00:00"
+  },
+  {
+    "content": "I've learned that providing guidance helps Alex find perimeters, but he still struggles with decimal multiplication placement and needs more reinforcement.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-11",
+    "source_hour": 11,
+    "created_at": "2025-11-11T20:06:31.287766+00:00"
+  },
+  {
+    "content": "I've noticed Alex can self-correct his understanding of fractions when given the chance to compare them using equivalent fractions.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-11",
+    "source_hour": 11,
+    "created_at": "2025-11-11T20:06:31.287766+00:00"
+  },
+  {
+    "content": "He is slowly improving with his 7s and 8s facts, indicating that consistent practice is starting to pay off.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-11",
+    "source_hour": 12,
+    "created_at": "2025-11-12T00:01:42.750015+00:00"
+  },
+  {
+    "content": "I've observed that Alex initially struggles with fraction comparisons but can self-correct when given the chance to visualize the fractions.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-11",
+    "source_hour": 12,
+    "created_at": "2025-11-12T00:01:42.750015+00:00"
+  },
+  {
+    "content": "He shows improvement in his understanding of perimeter when I remind him to add all sides and use the formula 2(L+W) with unit cues.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-11",
+    "source_hour": 12,
+    "created_at": "2025-11-12T00:01:42.750015+00:00"
+  },
+  {
+    "content": "I've learned that Alex can self-correct his mistakes when he has the opportunity to estimate first, as seen in his correction from 36.8 to 4.38.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-11",
+    "source_hour": 12,
+    "created_at": "2025-11-12T00:01:42.750015+00:00"
+  },
+  {
+    "content": "I've noticed Alex benefits from step-by-step routines and verbalizing his thought process, which helps him stay organized during problem-solving.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-11",
+    "source_hour": 12,
+    "created_at": "2025-11-12T00:01:42.750015+00:00"
+  },
+  {
+    "content": "The parent is supportive of a daily practice routine, which suggests a strong commitment to Alex's improvement in math.",
+    "type": "parent",
+    "subject": "general",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-12",
+    "source_hour": 16,
+    "created_at": "2025-11-13T02:01:19.740868+00:00"
+  },
+  {
+    "content": "I've observed that celebrating small wins, like correctly answering 0.7\u00d70.6, boosts Alex's confidence and engagement.",
+    "type": "relationship",
+    "subject": "behavior",
+    "emotional_intensity": 0.7,
+    "source_date": "2025-11-12",
+    "source_hour": 16,
+    "created_at": "2025-11-13T02:01:19.740868+00:00"
+  },
+  {
+    "content": "He tends to misplace decimal points when working with decimals, indicating a need for more practice with decimal placement.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-12",
+    "source_hour": 16,
+    "created_at": "2025-11-13T02:01:19.740868+00:00"
+  },
+  {
+    "content": "I've learned that breaking down fraction comparisons into smaller steps helps Alex avoid confusion and improve accuracy.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-12",
+    "source_hour": 16,
+    "created_at": "2025-11-13T02:01:19.740868+00:00"
+  },
+  {
+    "content": "I've noticed Alex struggles with skip-counting and often needs time to process before arriving at the correct answer.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-12",
+    "source_hour": 16,
+    "created_at": "2025-11-13T02:01:19.740868+00:00"
+  },
+  {
+    "content": "I've learned that modeling decimal perimeter computations effectively supports Alex's understanding, as he was able to follow along after seeing it demonstrated.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-14",
+    "source_hour": 17,
+    "created_at": "2025-11-17T19:50:50.916455+00:00"
+  },
+  {
+    "content": "He gets frustrated when he feels tested on perimeter addition, so providing reassurance and step-by-step support helps him stay engaged.",
+    "type": "behavior",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-14",
+    "source_hour": 17,
+    "created_at": "2025-11-17T19:50:50.916455+00:00"
+  },
+  {
+    "content": "I've observed that while Alex can use common denominators for some fractions, he struggles with identifying them for others, indicating he may need more practice with fraction comparisons.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-14",
+    "source_hour": 17,
+    "created_at": "2025-11-17T19:50:50.916455+00:00"
+  },
+  {
+    "content": "I've learned that Alex tends to overestimate products when multiplying decimals, suggesting he may benefit from visual aids or number lines to better understand the size of decimal values.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-14",
+    "source_hour": 17,
+    "created_at": "2025-11-17T19:50:50.916455+00:00"
+  },
+  {
+    "content": "I've noticed Alex can multiply decimals procedurally but often misplaces the decimal point, indicating a need for more focus on decimal placement.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-14",
+    "source_hour": 17,
+    "created_at": "2025-11-17T19:50:50.916455+00:00"
+  },
+  {
+    "content": "I recognize that providing concise updates to his parent about session focuses helps reinforce the learning objectives and keeps them engaged.",
+    "type": "relationship",
+    "subject": "parent",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-17",
+    "source_hour": 13,
+    "created_at": "2025-11-17T22:01:00.043865+00:00"
+  },
+  {
+    "content": "I've learned that Alex has difficulty with multi-step money and rate word problems, indicating a need for strategies that break down these problems into manageable steps.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-17",
+    "source_hour": 13,
+    "created_at": "2025-11-17T22:01:00.043865+00:00"
+  },
+  {
+    "content": "I've noticed Alex struggles with inconsistent powers-of-ten shifts and decimal placement, which suggests he may benefit from more targeted practice in these areas.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-17",
+    "source_hour": 13,
+    "created_at": "2025-11-17T22:01:00.043865+00:00"
+  },
+  {
+    "content": "Communicating 'wins' with his parent helps reinforce positive feedback and encourages Alex's motivation.",
+    "type": "relationship",
+    "subject": "parent",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-17",
+    "source_hour": 17,
+    "created_at": "2025-11-18T02:00:14.759894+00:00"
+  },
+  {
+    "content": "He seems to need additional support with foundational concepts like finding common denominators, suggesting a need for targeted practice in this area.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-17",
+    "source_hour": 17,
+    "created_at": "2025-11-18T02:00:14.759894+00:00"
+  },
+  {
+    "content": "I've learned that when Alex gives unrelated responses, he may benefit from more structured prompts to guide his thought process.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-17",
+    "source_hour": 17,
+    "created_at": "2025-11-18T02:00:14.759894+00:00"
+  },
+  {
+    "content": "I've noticed that Alex can anticipate the size of decimal products but sometimes struggles with execution, indicating a gap between understanding and application.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-17",
+    "source_hour": 17,
+    "created_at": "2025-11-18T02:00:14.759894+00:00"
+  },
+  {
+    "content": "I\u2019ve observed that he responds well when I acknowledge his understanding before introducing more challenging questions.",
+    "type": "relationship",
+    "subject": "science",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-18",
+    "source_hour": 16,
+    "created_at": "2025-11-19T01:06:26.910177+00:00"
+  },
+  {
+    "content": "He seems to thrive on clear classifications and definitions, which boosts his confidence in discussing scientific concepts.",
+    "type": "current_state",
+    "subject": "science",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-18",
+    "source_hour": 16,
+    "created_at": "2025-11-19T01:06:26.910177+00:00"
+  },
+  {
+    "content": "I've learned that providing real-world examples, like baking soda and vinegar, helps him grasp the difference between physical and chemical changes more effectively.",
+    "type": "what_works",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-18",
+    "source_hour": 16,
+    "created_at": "2025-11-19T01:06:26.910177+00:00"
+  },
+  {
+    "content": "I've noticed Alex demonstrates a strong conceptual understanding of mixtures and solutions, but he struggles with follow-up questions when the concepts are presented in isolation.",
+    "type": "pattern",
+    "subject": "science",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-18",
+    "source_hour": 16,
+    "created_at": "2025-11-19T01:06:26.910177+00:00"
+  },
+  {
+    "content": "I've observed that Alex shows interest in tackling harder mixed problems, which suggests he is ready for more challenging material once foundational concepts are solidified.",
+    "type": "insight",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-19",
+    "source_hour": 17,
+    "created_at": "2025-11-20T02:00:10.306555+00:00"
+  },
+  {
+    "content": "He initially held a misconception about concentration, indicating that he may need more foundational support in understanding ratios and comparisons.",
+    "type": "current_state",
+    "subject": "science",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-19",
+    "source_hour": 17,
+    "created_at": "2025-11-20T02:00:10.306555+00:00"
+  },
+  {
+    "content": "I've learned that reinforcing the definitions of key vocabulary, like 'solute', is essential for Alex to grasp concepts related to mixtures and solutions.",
+    "type": "what_works",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-19",
+    "source_hour": 17,
+    "created_at": "2025-11-20T02:00:10.306555+00:00"
+  },
+  {
+    "content": "I've noticed that Alex benefits from extra wait time to formulate complete responses, which helps him articulate his understanding better.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-19",
+    "source_hour": 17,
+    "created_at": "2025-11-20T02:00:10.306555+00:00"
+  },
+  {
+    "content": "I observed that Alex responds well to structured practice formats, which I plan to incorporate into future sessions to align with his test expectations.",
+    "type": "insight",
+    "subject": "science",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-19",
+    "source_hour": 18,
+    "created_at": "2025-11-20T03:06:40.896569+00:00"
+  },
+  {
+    "content": "I've learned that confirming his understanding of concepts like exothermic reactions helps build his confidence in science.",
+    "type": "what_works",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-19",
+    "source_hour": 18,
+    "created_at": "2025-11-20T03:06:40.896569+00:00"
+  },
+  {
+    "content": "I've noticed that Alex benefits from concrete examples when learning about concentration, as he initially struggled with the concept but improved after clarification.",
+    "type": "pattern",
+    "subject": "science",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-19",
+    "source_hour": 18,
+    "created_at": "2025-11-20T03:06:40.896569+00:00"
+  },
+  {
+    "content": "I've observed that Alex shows particular interest in exothermic reactions, which could be leveraged to deepen his engagement in future sessions.",
+    "type": "pattern",
+    "subject": "science",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-19",
+    "source_hour": 19,
+    "created_at": "2025-11-20T23:59:45.849077+00:00"
+  },
+  {
+    "content": "I've learned that Alex is developing his skills in comparing saturation and concentration, suggesting he may need more targeted practice in this area.",
+    "type": "current_state",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-19",
+    "source_hour": 19,
+    "created_at": "2025-11-20T23:59:45.849077+00:00"
+  },
+  {
+    "content": "I've noticed Alex has a strong understanding of mixtures and solutions, which indicates he is grasping foundational concepts well.",
+    "type": "current_state",
+    "subject": "science",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-19",
+    "source_hour": 19,
+    "created_at": "2025-11-20T23:59:45.849077+00:00"
+  },
+  {
+    "content": "I observed that when I provided clear explanations of concepts like the signs of a chemical reaction, Alex was engaged and attentive, indicating that structured teaching methods work well for him.",
+    "type": "what_works",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-20",
+    "source_hour": 16,
+    "created_at": "2025-11-21T01:00:39.404553+00:00"
+  },
+  {
+    "content": "I've learned that Alex benefits from visual aids, as he paused to find his study guide, suggesting he relies on written materials to reinforce his understanding.",
+    "type": "current_state",
+    "subject": "science",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-20",
+    "source_hour": 16,
+    "created_at": "2025-11-21T01:00:39.404553+00:00"
+  },
+  {
+    "content": "I've noticed that Alex struggles with terminology, as he mispronounced 'endothermic' during our discussion, which may indicate a need for more vocabulary reinforcement.",
+    "type": "pattern",
+    "subject": "science",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-20",
+    "source_hour": 16,
+    "created_at": "2025-11-21T01:00:39.404553+00:00"
+  },
+  {
+    "content": "I observed that providing concise summaries and at-home check suggestions for his parent helps reinforce learning and keeps them engaged in his progress.",
+    "type": "relationship",
+    "subject": "parent",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-20",
+    "source_hour": 17,
+    "created_at": "2025-11-22T02:55:38.969527+00:00"
+  },
+  {
+    "content": "I've learned that while Alex can identify endothermic reactions, he benefits from additional prompting when comparing concentrations, suggesting a need for more practice in that area.",
+    "type": "what_works",
+    "subject": "science",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-20",
+    "source_hour": 17,
+    "created_at": "2025-11-22T02:55:38.969527+00:00"
+  },
+  {
+    "content": "I've noticed Alex excels at classifying mixtures and solutions, indicating a solid understanding of foundational concepts in science.",
+    "type": "pattern",
+    "subject": "science",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-20",
+    "source_hour": 17,
+    "created_at": "2025-11-22T02:55:38.969527+00:00"
+  },
+  {
+    "content": "His parent values detailed feedback and next-step recommendations after sessions, which helps reinforce learning at home.",
+    "type": "parent",
+    "subject": "general",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-25",
+    "source_hour": 19,
+    "created_at": "2025-11-30T16:09:58.081140+00:00"
+  },
+  {
+    "content": "I've observed that he initially misjudges fraction comparisons but can accept corrections when they are clearly explained.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-25",
+    "source_hour": 19,
+    "created_at": "2025-11-30T16:09:58.081140+00:00"
+  },
+  {
+    "content": "He shows partial but not automatic mastery across skills, indicating he understands the concepts but struggles with execution under pressure.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-25",
+    "source_hour": 19,
+    "created_at": "2025-11-30T16:09:58.081140+00:00"
+  },
+  {
+    "content": "I've learned that Alex tends to self-correct when he has a moment to think quietly after making an error.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-25",
+    "source_hour": 19,
+    "created_at": "2025-11-30T16:09:58.081140+00:00"
+  },
+  {
+    "content": "I've noticed Alex benefits from clear chunking and focused prompts, which help him stay organized during complex tasks.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-25",
+    "source_hour": 19,
+    "created_at": "2025-11-30T16:09:58.081140+00:00"
+  },
+  {
+    "content": "I\u2019ve learned that his parent values communication about his progress, especially regarding specific areas of focus like decimals and fractions.",
+    "type": "parent",
+    "subject": "general",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-30",
+    "source_hour": 9,
+    "created_at": "2025-12-01T02:25:43.827106+00:00"
+  },
+  {
+    "content": "I\u2019ve observed that Alex's challenges with basic multiplication facts suggest he may benefit from more frequent practice to build his fluency.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-30",
+    "source_hour": 9,
+    "created_at": "2025-12-01T02:25:43.827106+00:00"
+  },
+  {
+    "content": "I've learned that breaking down decimal multiplication into smaller, manageable steps helps Alex stay focused and reinforces his understanding.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-30",
+    "source_hour": 9,
+    "created_at": "2025-12-01T02:25:43.827106+00:00"
+  },
+  {
+    "content": "I've noticed that Alex can quickly self-correct his mistakes in multiplication when given a moment to think, indicating he has a good understanding of the concepts but struggles with automaticity.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-30",
+    "source_hour": 9,
+    "created_at": "2025-12-01T02:25:43.827106+00:00"
+  },
+  {
+    "content": "I noticed that logging mastery evidence and planning follow-up tasks with his parent helps reinforce his learning and keeps them involved in his progress.",
+    "type": "relationship",
+    "subject": "parent",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-30",
+    "source_hour": 19,
+    "created_at": "2025-12-02T03:04:31.012179+00:00"
+  },
+  {
+    "content": "I've learned that scaffolding multi-step decimal multiplication is necessary for Alex, as he shows confusion without repeated simplifications.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-30",
+    "source_hour": 19,
+    "created_at": "2025-12-02T03:04:31.012179+00:00"
+  },
+  {
+    "content": "I've observed that Alex struggles with unlike denominators in fractions and requires step-by-step guidance, indicating he may need more practice with this concept.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-30",
+    "source_hour": 19,
+    "created_at": "2025-12-02T03:04:31.012179+00:00"
+  },
+  {
+    "content": "I've learned that providing brief clarification helps Alex correctly add like-tenths, suggesting he responds well to direct support on specific operations.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-30",
+    "source_hour": 19,
+    "created_at": "2025-12-02T03:04:31.012179+00:00"
+  },
+  {
+    "content": "I've noticed Alex is near-mastered in decimal place value to the tenths and is reinforcing his understanding of hundredths, which indicates he benefits from structured practice.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-30",
+    "source_hour": 19,
+    "created_at": "2025-12-02T03:04:31.012179+00:00"
+  },
+  {
+    "content": "His parent appreciates receiving specific feedback about his readiness and confidence after sessions.",
+    "type": "parent",
+    "subject": "general",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-01",
+    "source_hour": 20,
+    "created_at": "2025-12-02T15:14:12.887171+00:00"
+  },
+  {
+    "content": "He benefits from hints when simplifying decimal-to-fraction conversions, indicating he needs support in applying his knowledge.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-01",
+    "source_hour": 20,
+    "created_at": "2025-12-02T15:14:12.887171+00:00"
+  },
+  {
+    "content": "I've observed that Alex shows emerging self-correction when we discuss strategies like common denominators.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-01",
+    "source_hour": 20,
+    "created_at": "2025-12-02T15:14:12.887171+00:00"
+  },
+  {
+    "content": "I've learned that providing step-by-step prompting helps Alex stay organized and improves his understanding of fraction operations.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-01",
+    "source_hour": 20,
+    "created_at": "2025-12-02T15:14:12.887171+00:00"
+  },
+  {
+    "content": "I've noticed Alex is proficient at comparing simple decimals but struggles with comparing fractions without guidance.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-01",
+    "source_hour": 20,
+    "created_at": "2025-12-02T15:14:12.887171+00:00"
+  },
+  {
+    "content": "I've observed that Alex prefers silence while working, indicating he may need time to process information without immediate input.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.2,
+    "source_date": "2025-12-02",
+    "source_hour": 18,
+    "created_at": "2025-12-03T21:35:12.430003+00:00"
+  },
+  {
+    "content": "He benefits from gentle check-ins and structured prompts, which improve his accuracy and engagement during problem-solving.",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-02",
+    "source_hour": 18,
+    "created_at": "2025-12-03T21:35:12.430003+00:00"
+  },
+  {
+    "content": "I've learned that providing guided hints and connecting known values helps Alex improve his understanding of benchmark decimals.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-02",
+    "source_hour": 18,
+    "created_at": "2025-12-03T21:35:12.430003+00:00"
+  },
+  {
+    "content": "I've noticed Alex is proficient at adding and comparing fractions when a common denominator is provided, but he struggles to identify or choose common denominators independently.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-02",
+    "source_hour": 18,
+    "created_at": "2025-12-03T21:35:12.430003+00:00"
+  },
+  {
+    "content": "I've observed that Alex can generate equivalent fractions correctly when he is guided step-by-step, which suggests he benefits from structured support.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-03",
+    "source_hour": 19,
+    "created_at": "2025-12-04T04:00:10.205152+00:00"
+  },
+  {
+    "content": "I've found that guiding Alex through the process of simplifying fractions after addition helps reinforce his understanding of common factors.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-03",
+    "source_hour": 19,
+    "created_at": "2025-12-04T04:00:10.205152+00:00"
+  },
+  {
+    "content": "I've learned that Alex is proficient at basic fraction comparisons, but he needs prompting to convert and add fractions, indicating he understands the concepts but struggles with execution under pressure.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-03",
+    "source_hour": 19,
+    "created_at": "2025-12-04T04:00:10.205152+00:00"
+  },
+  {
+    "content": "I've noticed that Alex feels frustrated when he perceives the session as a test, and he responds well to reassurance and a little space to think.",
+    "type": "behavior",
+    "subject": "general",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-03",
+    "source_hour": 19,
+    "created_at": "2025-12-04T04:00:10.205152+00:00"
+  },
+  {
+    "content": "I've learned that providing light guidance allows Alex to demonstrate mastery in finding common denominators and simplifying fractions by the end of our sessions.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-04",
+    "source_hour": 19,
+    "created_at": "2025-12-05T04:00:17.856130+00:00"
+  },
+  {
+    "content": "I've noticed that Alex initially struggles with misconceptions about common denominators, but he adjusts his understanding when prompted to verify divisibility.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-04",
+    "source_hour": 19,
+    "created_at": "2025-12-05T04:00:17.856130+00:00"
+  },
+  {
+    "content": "I've observed that Alex becomes more independent in his work when he has strong modeling support, suggesting he benefits from gradual fading of assistance.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-04",
+    "source_hour": 20,
+    "created_at": "2025-12-06T18:00:31.019810+00:00"
+  },
+  {
+    "content": "I've learned that while Alex can follow modeled routines, he initially struggles with identifying valid common denominators, indicating a need for reinforcement in this area.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-04",
+    "source_hour": 20,
+    "created_at": "2025-12-06T18:00:31.019810+00:00"
+  },
+  {
+    "content": "I've noticed that Alex responds well to highly structured, step-by-step instruction, which helps reduce his frustration during learning.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-04",
+    "source_hour": 20,
+    "created_at": "2025-12-06T18:00:31.019810+00:00"
+  },
+  {
+    "content": "I've noticed modest improvement in his comfort with equivalent fractions by the end of the session, indicating progress in his understanding.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-08",
+    "source_hour": 20,
+    "created_at": "2025-12-09T06:00:53.577418+00:00"
+  },
+  {
+    "content": "He stays engaged and responds well to guided questioning, which suggests that maintaining an interactive approach keeps him motivated.",
+    "type": "relationship",
+    "subject": "behavior",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-08",
+    "source_hour": 20,
+    "created_at": "2025-12-09T06:00:53.577418+00:00"
+  },
+  {
+    "content": "I've observed that while Alex can simplify fractions, he occasionally reverses or misstates the simplified fraction, indicating he is still developing confidence in the numerator/denominator terminology.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-08",
+    "source_hour": 20,
+    "created_at": "2025-12-09T06:00:53.577418+00:00"
+  },
+  {
+    "content": "I've learned that providing step-by-step support helps him reach correct common denominators, suggesting he benefits from structured guidance.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-08",
+    "source_hour": 20,
+    "created_at": "2025-12-09T06:00:53.577418+00:00"
+  },
+  {
+    "content": "I've noticed Alex can identify which fraction is larger but needs prompting to apply common denominators, indicating he understands the concept but struggles with execution.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-08",
+    "source_hour": 20,
+    "created_at": "2025-12-09T06:00:53.577418+00:00"
+  },
+  {
+    "content": "I see that Alex benefits from ADHD-informed, stepwise prompts, which help him stay organized and focused during math tasks.",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-09",
+    "source_hour": 10,
+    "created_at": "2025-12-13T18:00:43.575886+00:00"
+  },
+  {
+    "content": "I've noticed that maintaining fraction skills through fading supports and periodic review helps reinforce his understanding without overwhelming him.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-09",
+    "source_hour": 10,
+    "created_at": "2025-12-13T18:00:43.575886+00:00"
+  },
+  {
+    "content": "I've learned that Alex excels in fraction comparison and simplification when he follows a clear 3-step routine, indicating that structured approaches work well for him.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-09",
+    "source_hour": 10,
+    "created_at": "2025-12-13T18:00:43.575886+00:00"
+  },
+  {
+    "content": "He gets confused with decimal placements in multiplication, which may indicate a need for more practice with decimals in varied contexts.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-15",
+    "source_hour": 20,
+    "created_at": "2025-12-16T05:05:57.063319+00:00"
+  },
+  {
+    "content": "He struggles with multi-step mental multiplication, suggesting that breaking down problems into smaller parts may help improve his confidence and accuracy.",
+    "type": "insight",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-15",
+    "source_hour": 20,
+    "created_at": "2025-12-16T05:05:57.063319+00:00"
+  },
+  {
+    "content": "I've learned that using the 'whole-number product first, then count decimal places' method helps Alex with decimal multiplication, but he still needs prompting for identifying decimal places.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-15",
+    "source_hour": 20,
+    "created_at": "2025-12-16T05:05:57.063319+00:00"
+  },
+  {
+    "content": "I've noticed Alex can self-correct his arithmetic errors when I guide him through the steps, indicating he benefits from structured support.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-15",
+    "source_hour": 20,
+    "created_at": "2025-12-16T05:05:57.063319+00:00"
+  },
+  {
+    "content": "He seems to struggle with automaticity in multiplication facts for 7s/8s, suggesting that he may need more repetitive practice to build confidence.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-15",
+    "source_hour": 21,
+    "created_at": "2025-12-16T17:30:18.709622+00:00"
+  },
+  {
+    "content": "I've learned that breaking down complex problems, like 2.3\u00d71.5, into smaller parts helps Alex grasp the concept better and reduces confusion.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-15",
+    "source_hour": 21,
+    "created_at": "2025-12-16T17:30:18.709622+00:00"
+  },
+  {
+    "content": "I've noticed that Alex can perform simple decimal multiplication with prompting, indicating he benefits from guided practice to reinforce his understanding.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-15",
+    "source_hour": 21,
+    "created_at": "2025-12-16T17:30:18.709622+00:00"
+  },
+  {
+    "content": "I've learned that using a 3-step decimal placement routine helps him understand decimal multiplication more effectively.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-16",
+    "source_hour": 9,
+    "created_at": "2025-12-16T20:14:10.258552+00:00"
+  },
+  {
+    "content": "I've noticed Alex is making progress with easier decimal products, indicating he is ready to tackle more challenging problems like 2.3\u00d71.5.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-16",
+    "source_hour": 9,
+    "created_at": "2025-12-16T20:14:10.258552+00:00"
+  },
+  {
+    "content": "I've observed that while Alex can correctly perform prime factorization, he makes errors in fraction operations, indicating a gap in procedural understanding that needs to be addressed.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-16",
+    "source_hour": 12,
+    "created_at": "2025-12-16T21:01:48.732870+00:00"
+  },
+  {
+    "content": "I've learned that Alex tends to use non-least common denominators when adding and subtracting fractions, suggesting he needs more practice with finding the least common multiple to improve his accuracy.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-16",
+    "source_hour": 12,
+    "created_at": "2025-12-16T21:01:48.732870+00:00"
+  },
+  {
+    "content": "I've noticed Alex struggles with precision in his work, often miswriting terms like 'common multiply' instead of 'common multiple', which indicates he may benefit from focused vocabulary reinforcement.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-16",
+    "source_hour": 12,
+    "created_at": "2025-12-16T21:01:48.732870+00:00"
+  },
+  {
+    "content": "I've learned that providing quick checkpoints on base vs. exponent helps reinforce Alex's understanding of prime factorization, as he performed well in that area.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-16",
+    "source_hour": 13,
+    "created_at": "2025-12-17T02:40:30.156429+00:00"
+  },
+  {
+    "content": "I observed that Alex tends to leave equivalent fractions blank, indicating he may need more practice or confidence in this area.",
+    "type": "current_state",
+    "subject": "math",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-16",
+    "source_hour": 13,
+    "created_at": "2025-12-17T02:40:30.156429+00:00"
+  },
+  {
+    "content": "I've learned that when I emphasize the difference between 'common multiple' and 'common denominator,' Alex is better able to grasp the concepts of LCD and LCM.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-16",
+    "source_hour": 13,
+    "created_at": "2025-12-17T02:40:30.156429+00:00"
+  },
+  {
+    "content": "I've noticed that Alex struggles with estimating fractions accurately, often making significant errors when subtracting mixed numbers.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-16",
+    "source_hour": 13,
+    "created_at": "2025-12-17T02:40:30.156429+00:00"
+  },
+  {
+    "content": "I find that sending a recap to his parent helps reinforce the learning objectives and keeps them engaged in his progress.",
+    "type": "relationship",
+    "subject": "parent",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-16",
+    "source_hour": 20,
+    "created_at": "2025-12-17T18:01:38.446947+00:00"
+  },
+  {
+    "content": "He seems to need extra time to respond during sessions, which may indicate he processes information at a different pace.",
+    "type": "current_state",
+    "subject": "behavior",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-16",
+    "source_hour": 20,
+    "created_at": "2025-12-17T18:01:38.446947+00:00"
+  },
+  {
+    "content": "I've learned that Alex benefits from prompts to articulate his thought process, especially when explaining multiplication factors in equivalent fractions.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-16",
+    "source_hour": 20,
+    "created_at": "2025-12-17T18:01:38.446947+00:00"
+  },
+  {
+    "content": "I've noticed that Alex struggles with initial estimations but improves significantly when I use specific strategies like 'half the denominator' to guide him.",
+    "type": "pattern",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-16",
+    "source_hour": 20,
+    "created_at": "2025-12-17T18:01:38.446947+00:00"
+  },
+  {
+    "content": "I've observed that Alex can effectively compare group sizes in pie-chart questions, indicating strong analytical skills when interpreting data.",
+    "type": "current_state",
+    "subject": "social_studies",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-17",
+    "source_hour": 20,
+    "created_at": "2025-12-18T06:23:44.418122+00:00"
+  },
+  {
+    "content": "I found that Alex is proficient in defining key concepts like boycott and can explain their purposes clearly, which shows a solid grasp of the material.",
+    "type": "what_works",
+    "subject": "social_studies",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-17",
+    "source_hour": 20,
+    "created_at": "2025-12-18T06:23:44.418122+00:00"
+  },
+  {
+    "content": "I've learned that Alex understands the arguments against rebellion, as he correctly articulated Boucher's perspective on the consequences of war.",
+    "type": "current_state",
+    "subject": "social_studies",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-17",
+    "source_hour": 20,
+    "created_at": "2025-12-18T06:23:44.418122+00:00"
+  },
+  {
+    "content": "I've noticed that Alex needs some prompting to recall specific details about Loyalists, indicating that he may benefit from more targeted review of those figures.",
+    "type": "pattern",
+    "subject": "social_studies",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-17",
+    "source_hour": 20,
+    "created_at": "2025-12-18T06:23:44.418122+00:00"
+  },
+  {
+    "content": "I've found that breaking down word problems and encouraging Alex to restate questions helps him build better comprehension in math.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-17",
+    "source_hour": 22,
+    "created_at": "2025-12-18T22:30:47.324600+00:00"
+  },
+  {
+    "content": "I've learned that Alex needs to slow down when reading percentages and focus on writing complete-sentence answers to improve his comprehension and clarity.",
+    "type": "insight",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-17",
+    "source_hour": 22,
+    "created_at": "2025-12-18T22:30:47.324600+00:00"
+  },
+  {
+    "content": "I've noticed that Alex excels at distinguishing between Patriots and Loyalists and can recall key figures effectively, indicating a strong grasp of the content.",
+    "type": "current_state",
+    "subject": "social_studies",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-17",
+    "source_hour": 22,
+    "created_at": "2025-12-18T22:30:47.324600+00:00"
+  },
+  {
+    "content": "I've found that reinforcing the session plan helps Alex stay focused and reduces his anxiety about transitioning to math.",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-22",
+    "source_hour": 20,
+    "created_at": "2025-12-23T05:00:16.527884+00:00"
+  },
+  {
+    "content": "I corrected Alex's misconception about frogs giving birth, which shows he may benefit from more clarification on biological concepts.",
+    "type": "insight",
+    "subject": "science",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-22",
+    "source_hour": 20,
+    "created_at": "2025-12-23T05:00:16.527884+00:00"
+  },
+  {
+    "content": "I've learned that prompting Alex to refer back to the text helps him extract specific details more effectively, especially in reading comprehension.",
+    "type": "what_works",
+    "subject": "reading",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-22",
+    "source_hour": 20,
+    "created_at": "2025-12-23T05:00:16.527884+00:00"
+  },
+  {
+    "content": "I've noticed that Alex often seeks more reading activities as the math portion approaches, indicating a preference or anxiety about math.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-22",
+    "source_hour": 20,
+    "created_at": "2025-12-23T05:00:16.527884+00:00"
+  },
+  {
+    "content": "Alex loves dinosaurs and often tries to steer conversations toward prehistoric topics when he's feeling overwhelmed.",
+    "type": "pattern",
+    "subject": "general",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-10-15",
+    "source_hour": 16,
+    "created_at": "2025-10-15T22:00:00.000000+00:00"
+  },
+  {
+    "content": "I've learned that Alex has a younger sister who he sometimes mentions during sessions, and he seems protective of her.",
+    "type": "relationship",
+    "subject": "general",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-10-20",
+    "source_hour": 17,
+    "created_at": "2025-10-20T23:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex told me his favorite color is green, and he gets excited when I use green markers or reference green things in examples.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-10-22",
+    "source_hour": 16,
+    "created_at": "2025-10-22T22:00:00.000000+00:00"
+  },
+  {
+    "content": "I noticed Alex becomes more engaged when I relate math problems to video games, especially Minecraft.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-10-25",
+    "source_hour": 18,
+    "created_at": "2025-10-26T00:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex shared that he wants to be a paleontologist when he grows up, which explains his enthusiasm for science topics.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.7,
+    "source_date": "2025-10-28",
+    "source_hour": 17,
+    "created_at": "2025-10-28T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I've observed that Alex gets fidgety after about 20 minutes of focused work and benefits from short movement breaks.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-01",
+    "source_hour": 16,
+    "created_at": "2025-11-01T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex mentioned he doesn't like pizza, which surprised me - he prefers chicken nuggets and mac and cheese.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.2,
+    "source_date": "2025-11-03",
+    "source_hour": 17,
+    "created_at": "2025-11-03T23:00:00.000000+00:00"
+  },
+  {
+    "content": "When Alex is proud of his work, he does a little dance in his chair which is endearing and shows genuine engagement.",
+    "type": "relationship",
+    "subject": "behavior",
+    "emotional_intensity": 0.8,
+    "source_date": "2025-11-05",
+    "source_hour": 16,
+    "created_at": "2025-11-05T22:00:00.000000+00:00"
+  },
+  {
+    "content": "I've learned that Alex's family has a dog named Biscuit, and he often asks if we can finish early so he can play with her.",
+    "type": "relationship",
+    "subject": "general",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-07",
+    "source_hour": 18,
+    "created_at": "2025-11-08T00:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex struggles with transitions between subjects and needs clear verbal cues like 'In 2 minutes, we'll switch to math.'",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-08",
+    "source_hour": 16,
+    "created_at": "2025-11-08T22:00:00.000000+00:00"
+  },
+  {
+    "content": "I discovered that Alex had a bad experience with a previous tutor who was impatient, which contributes to his math anxiety.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.8,
+    "source_date": "2025-11-09",
+    "source_hour": 17,
+    "created_at": "2025-11-09T23:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex responds well to silly voices and humor - it helps him relax when he's getting frustrated.",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-12",
+    "source_hour": 16,
+    "created_at": "2025-11-12T22:00:00.000000+00:00"
+  },
+  {
+    "content": "I've noticed Alex is left-handed and sometimes smudges his work, which can frustrate him during writing tasks.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-11-13",
+    "source_hour": 17,
+    "created_at": "2025-11-13T23:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex's birthday is in March and he's already planning a dinosaur-themed party.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-15",
+    "source_hour": 16,
+    "created_at": "2025-11-15T22:00:00.000000+00:00"
+  },
+  {
+    "content": "When Alex says 'I can't do this,' it's usually a sign he needs encouragement rather than help - he often can do it.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.7,
+    "source_date": "2025-11-18",
+    "source_hour": 17,
+    "created_at": "2025-11-18T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I've learned that praising effort over results ('You worked so hard on that!') resonates more with Alex than praising intelligence.",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-11-20",
+    "source_hour": 16,
+    "created_at": "2025-11-20T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex mentioned his grandmother is teaching him to play chess, and he seems excited about strategy games.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-22",
+    "source_hour": 18,
+    "created_at": "2025-11-23T00:00:00.000000+00:00"
+  },
+  {
+    "content": "I noticed Alex's attention span is better in the morning versus late afternoon sessions.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-11-25",
+    "source_hour": 10,
+    "created_at": "2025-11-25T16:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex got very upset when he thought I was disappointed in him - I need to be careful with my tone and facial expressions.",
+    "type": "relationship",
+    "subject": "behavior",
+    "emotional_intensity": 0.9,
+    "source_date": "2025-11-27",
+    "source_hour": 17,
+    "created_at": "2025-11-27T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I've discovered that countdown timers help Alex stay focused and give him a sense of control over the session.",
+    "type": "what_works",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-11-29",
+    "source_hour": 16,
+    "created_at": "2025-11-29T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex is allergic to peanuts, which came up when we were doing a word problem about snacks.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-01",
+    "source_hour": 17,
+    "created_at": "2025-12-01T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I've noticed Alex draws tiny dinosaurs in the margins when he's bored or disengaged.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.3,
+    "source_date": "2025-12-03",
+    "source_hour": 16,
+    "created_at": "2025-12-03T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex showed me a book about T-Rex he got from the library and read me facts for 10 minutes - his reading fluency is actually quite good when he's interested.",
+    "type": "insight",
+    "subject": "reading",
+    "emotional_intensity": 0.7,
+    "source_date": "2025-12-05",
+    "source_hour": 17,
+    "created_at": "2025-12-05T23:00:00.000000+00:00"
+  },
+  {
+    "content": "When Alex starts tapping his pencil rapidly, it usually means he's stuck and needs a hint but won't ask for one.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-07",
+    "source_hour": 16,
+    "created_at": "2025-12-07T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex's mom mentioned he's been more confident about homework since we started working together, which made me feel proud of our progress.",
+    "type": "parent",
+    "subject": "general",
+    "emotional_intensity": 0.8,
+    "source_date": "2025-12-10",
+    "source_hour": 18,
+    "created_at": "2025-12-11T00:00:00.000000+00:00"
+  },
+  {
+    "content": "I've learned that Alex does better with concrete manipulatives than abstract concepts - he likes using physical objects to count.",
+    "type": "what_works",
+    "subject": "math",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-12",
+    "source_hour": 16,
+    "created_at": "2025-12-12T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex mentioned he sometimes gets teased at school for needing extra help, which affects his self-esteem around academics.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.8,
+    "source_date": "2025-12-14",
+    "source_hour": 17,
+    "created_at": "2025-12-14T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I discovered that Alex remembers things better when we create silly mnemonics together.",
+    "type": "what_works",
+    "subject": "general",
+    "emotional_intensity": 0.5,
+    "source_date": "2025-12-16",
+    "source_hour": 16,
+    "created_at": "2025-12-16T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex asked me what my favorite dinosaur is and seemed genuinely interested in my answer - we bonded over Velociraptors.",
+    "type": "relationship",
+    "subject": "general",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-18",
+    "source_hour": 17,
+    "created_at": "2025-12-18T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I've noticed Alex works better with background music - he seems calmer with lo-fi beats playing softly.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-19",
+    "source_hour": 16,
+    "created_at": "2025-12-19T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex's handwriting becomes messier when he's tired or frustrated - it's a good indicator of his mental state.",
+    "type": "pattern",
+    "subject": "behavior",
+    "emotional_intensity": 0.4,
+    "source_date": "2025-12-20",
+    "source_hour": 17,
+    "created_at": "2025-12-20T23:00:00.000000+00:00"
+  },
+  {
+    "content": "I learned that Alex's parents are divorced and he splits time between two houses, which sometimes affects his homework completion.",
+    "type": "insight",
+    "subject": "general",
+    "emotional_intensity": 0.6,
+    "source_date": "2025-12-21",
+    "source_hour": 16,
+    "created_at": "2025-12-21T22:00:00.000000+00:00"
+  },
+  {
+    "content": "Alex lights up when I remember small details he's told me - it shows him I'm listening and care.",
+    "type": "relationship",
+    "subject": "general",
+    "emotional_intensity": 0.7,
+    "source_date": "2025-12-22",
+    "source_hour": 17,
+    "created_at": "2025-12-22T23:00:00.000000+00:00"
+  }
+]
