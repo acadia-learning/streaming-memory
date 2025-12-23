@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/chat': 'https://bryanhoulton--aryan-tutor-streaming-tutorservice-serve.modal.run'
+      '/chat': 'https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run'
     }
   }
 })

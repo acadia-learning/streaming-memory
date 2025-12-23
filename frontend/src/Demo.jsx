@@ -1,208 +1,290 @@
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Link, useSearchParams } from 'react-router-dom'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-const API_URL = 'https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run'
+import {
+  AnimatePresence,
+  motion,
+} from 'framer-motion';
+import {
+  Link,
+  useSearchParams,
+} from 'react-router-dom';
+
+const API_URL =
+  "https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run";
 
 const SCENARIOS = {
   tutor: {
     name: "AI Tutor",
-    description: "You are Alex, a 5th grade student. Your tutor has months of memories about how you learn.",
+    description:
+      "You are Alex, a 5th grade student. Your tutor has months of memories about how you learn.",
     placeholder: "Ask about homework, math, or anything...",
     suggestedQuestion: "Can you help me with fractions?",
   },
   dad: {
-    name: "Personal Assistant", 
-    description: "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
+    name: "Personal Assistant",
+    description:
+      "Your assistant has access to your memories and notes. Ask for help thinking through decisions.",
     placeholder: "Ask for advice or help planning...",
     suggestedQuestion: "What should I get my dad for his birthday?",
   },
-}
+};
 
 export default function Demo() {
-  const [searchParams] = useSearchParams()
-  const scenario = searchParams.get('scenario') || 'tutor'
-  const scenarioConfig = SCENARIOS[scenario] || SCENARIOS.tutor
-  
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [currentMemories, setCurrentMemories] = useState([])
-  const [thinking, setThinking] = useState('')
-  const [memoryUpdates, setMemoryUpdates] = useState(0)
-  const [hoveredMemories, setHoveredMemories] = useState(null)
-  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
-  const [updateFrequency, setUpdateFrequency] = useState(1)
-  const [maxMemories, setMaxMemories] = useState(5)
-  const [lookbackTokens, setLookbackTokens] = useState(60)
-  const [showSettings, setShowSettings] = useState(false)
-  const [waitingForFirstToken, setWaitingForFirstToken] = useState(false)
-  const chatRef = useRef(null)
-  const inputRef = useRef(null)
-  const lastMessageRef = useRef(null)
+  const [searchParams] = useSearchParams();
+  const scenario = searchParams.get("scenario") || "tutor";
+  const scenarioConfig = SCENARIOS[scenario] || SCENARIOS.tutor;
 
-  const hasMessages = messages.length > 0
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [currentMemories, setCurrentMemories] = useState([]);
+  const [thinking, setThinking] = useState("");
+  const [memoryUpdates, setMemoryUpdates] = useState(0);
+  const [hoveredMemories, setHoveredMemories] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
+  const [updateFrequency, setUpdateFrequency] = useState(1);
+  const [maxMemories, setMaxMemories] = useState(5);
+  const [lookbackTokens, setLookbackTokens] = useState(60);
+  const [baseContextSize, setBaseContextSize] = useState(0);
+  const [currentMemoryTokens, setCurrentMemoryTokens] = useState(0);
+  const [totalUniqueMemoryTokens, setTotalUniqueMemoryTokens] = useState(0);
+  const [uniqueMemoriesCount, setUniqueMemoriesCount] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
+  const [waitingForFirstToken, setWaitingForFirstToken] = useState(false);
+  const chatRef = useRef(null);
+  const inputRef = useRef(null);
+  const lastMessageRef = useRef(null);
+
+  const hasMessages = messages.length > 0;
 
   // Scroll to show new message near top when user sends
   const scrollToNewMessage = () => {
     if (lastMessageRef.current && chatRef.current) {
-      const containerTop = chatRef.current.getBoundingClientRect().top
-      const messageTop = lastMessageRef.current.getBoundingClientRect().top
-      const offset = messageTop - containerTop - 40
-      chatRef.current.scrollTop += offset
+      const containerTop = chatRef.current.getBoundingClientRect().top;
+      const messageTop = lastMessageRef.current.getBoundingClientRect().top;
+      const offset = messageTop - containerTop - 40;
+      chatRef.current.scrollTop += offset;
     }
-  }
+  };
 
   // Auto-scroll during streaming
   useEffect(() => {
     if (isStreaming && chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [thinking, currentMemories, messages])
+  }, [thinking, currentMemories, messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || isStreaming) return
+    if (!input.trim() || isStreaming) return;
 
-    const userMessage = input.trim()
-    setInput('')
-    setIsStreaming(true)
-    setWaitingForFirstToken(true)
-    setThinking('')
-    setMemoryUpdates(0)
-    setCurrentMemories([])
+    const userMessage = input.trim();
+    setInput("");
+    setIsStreaming(true);
+    setWaitingForFirstToken(true);
+    setThinking("");
+    setMemoryUpdates(0);
+    setCurrentMemories([]);
+    setBaseContextSize(0);
+    setCurrentMemoryTokens(0);
+    setTotalUniqueMemoryTokens(0);
+    setUniqueMemoriesCount(0);
 
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
-    
-    const assistantId = Date.now()
-    setMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: '', 
-      id: assistantId, 
-      streaming: true,
-      timeline: [],
-      thinkingTimeline: []
-    }])
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
-    setTimeout(scrollToNewMessage, 50)
+    const assistantId = Date.now();
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: "",
+        id: assistantId,
+        streaming: true,
+        timeline: [],
+        thinkingTimeline: [],
+      },
+    ]);
+
+    setTimeout(scrollToNewMessage, 50);
 
     try {
-      const history = messages.map(m => ({ role: m.role, content: m.content }))
-      
-      const response = await fetch(`${API_URL}/chat/stream`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, history, update_every_n: updateFrequency, max_memories: maxMemories, lookback_tokens: lookbackTokens, scenario })
-      })
+      const history = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      let fullResponse = ''
-      let fullThinking = ''
-      let timeline = []
-      let thinkingTimeline = []
-      let latestMemories = []
+      const response = await fetch(`${API_URL}/chat/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          history,
+          update_every_n: updateFrequency,
+          max_memories: maxMemories,
+          lookback_tokens: lookbackTokens,
+          scenario,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullResponse = "";
+      let fullThinking = "";
+      let timeline = [];
+      let thinkingTimeline = [];
+      let latestMemories = [];
 
       while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
+        const { value, done } = await reader.read();
+        if (done) break;
 
-        buffer += decoder.decode(value, { stream: true })
-        const events = buffer.split('\n\n')
-        buffer = events.pop()
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop();
 
         for (const event of events) {
-          if (!event.trim()) continue
-          const match = event.match(/^data:\s*(.+)$/s)
-          if (!match) continue
+          if (!event.trim()) continue;
+          const match = event.match(/^data:\s*(.+)$/s);
+          if (!match) continue;
 
           try {
-            const data = JSON.parse(match[1])
+            const data = JSON.parse(match[1]);
 
-            if (data.type === 'memories') {
-              latestMemories = data.memories
-              setCurrentMemories(data.memories)
-              setWaitingForFirstToken(false)
-            } else if (data.type === 'memory_update') {
-              latestMemories = data.memories
-              setCurrentMemories(data.memories)
-              setMemoryUpdates(prev => prev + 1)
-            } else if (data.type === 'thinking') {
-              fullThinking += data.t
-              thinkingTimeline.push({ token: data.t, memories: [...latestMemories] })
-              setThinking(fullThinking)
-              setMessages(prev => prev.map(m => 
-                m.id === assistantId ? { ...m, thinkingTimeline: [...thinkingTimeline] } : m
-              ))
-            } else if (data.type === 'token') {
-              fullResponse += data.t
-              timeline.push({ token: data.t, memories: [...latestMemories] })
-              setMessages(prev => prev.map(m => 
-                m.id === assistantId ? { ...m, content: fullResponse, timeline: [...timeline] } : m
-              ))
-            } else if (data.type === 'done') {
-              setMessages(prev => prev.map(m => 
-                m.id === assistantId ? { 
-                  ...m, 
-                  streaming: false, 
-                  thinking: fullThinking,
-                  timeline: [...timeline],
-                  thinkingTimeline: [...thinkingTimeline]
-                } : m
-              ))
-              setThinking('')
-              setCurrentMemories([])
+            if (data.type === "context_size") {
+              if (data.base_context_size)
+                setBaseContextSize(data.base_context_size);
+              if (data.current_memory_tokens !== undefined)
+                setCurrentMemoryTokens(data.current_memory_tokens);
+              if (data.total_unique_memory_tokens !== undefined)
+                setTotalUniqueMemoryTokens(data.total_unique_memory_tokens);
+              if (data.unique_memories)
+                setUniqueMemoriesCount(data.unique_memories);
+            } else if (data.type === "memories") {
+              latestMemories = data.memories;
+              setCurrentMemories(data.memories);
+              setWaitingForFirstToken(false);
+            } else if (data.type === "memory_update") {
+              latestMemories = data.memories;
+              setCurrentMemories(data.memories);
+              setMemoryUpdates((prev) => prev + 1);
+              if (data.base_context_size)
+                setBaseContextSize(data.base_context_size);
+              if (data.current_memory_tokens !== undefined)
+                setCurrentMemoryTokens(data.current_memory_tokens);
+              if (data.total_unique_memory_tokens !== undefined)
+                setTotalUniqueMemoryTokens(data.total_unique_memory_tokens);
+              if (data.unique_memories)
+                setUniqueMemoriesCount(data.unique_memories);
+            } else if (data.type === "thinking") {
+              fullThinking += data.t;
+              thinkingTimeline.push({
+                token: data.t,
+                memories: [...latestMemories],
+              });
+              setThinking(fullThinking);
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? { ...m, thinkingTimeline: [...thinkingTimeline] }
+                    : m
+                )
+              );
+            } else if (data.type === "token") {
+              fullResponse += data.t;
+              timeline.push({ token: data.t, memories: [...latestMemories] });
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? { ...m, content: fullResponse, timeline: [...timeline] }
+                    : m
+                )
+              );
+            } else if (data.type === "max_tokens") {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? {
+                        ...m,
+                        hitMaxTokens: true,
+                      }
+                    : m
+                )
+              );
+            } else if (data.type === "done") {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? {
+                        ...m,
+                        streaming: false,
+                        thinking: fullThinking,
+                        timeline: [...timeline],
+                        thinkingTimeline: [...thinkingTimeline],
+                      }
+                    : m
+                )
+              );
+              setThinking("");
+              setCurrentMemories([]);
             }
           } catch (e) {
-            console.error('Parse error:', e)
+            console.error("Parse error:", e);
           }
         }
       }
     } catch (e) {
-      setMessages(prev => prev.map(m => 
-        m.id === assistantId ? { ...m, content: `Error: ${e.message}`, streaming: false } : m
-      ))
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: `Error: ${e.message}`, streaming: false }
+            : m
+        )
+      );
     }
 
-    setIsStreaming(false)
-    inputRef.current?.focus()
-  }
+    setIsStreaming(false);
+    inputRef.current?.focus();
+  };
 
-  const hoverTimeoutRef = useRef(null)
+  const hoverTimeoutRef = useRef(null);
 
   const handleTokenHover = (memories, e) => {
     if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-      hoverTimeoutRef.current = null
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
     if (memories && memories.length > 0) {
-      setHoveredMemories(memories)
-      setHoverPosition({ x: e.clientX, y: e.clientY })
+      setHoveredMemories(memories);
+      setHoverPosition({ x: e.clientX, y: e.clientY });
     }
-  }
+  };
 
   const handleTokenLeave = () => {
     hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredMemories(null)
-    }, 150)
-  }
+      setHoveredMemories(null);
+    }, 150);
+  };
 
   const handleTooltipEnter = () => {
     if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-      hoverTimeoutRef.current = null
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
-  }
+  };
 
   const handleTooltipLeave = () => {
-    setHoveredMemories(null)
-  }
+    setHoveredMemories(null);
+  };
 
   const renderTokenizedText = (timeline, isThinking = false) => {
-    if (!timeline || timeline.length === 0) return null
-    
+    if (!timeline || timeline.length === 0) return null;
+
     return (
-      <span className={isThinking ? 'italic' : ''}>
+      <span className={isThinking ? "italic" : ""}>
         {timeline.map((item, i) => (
           <span
             key={i}
@@ -214,26 +296,137 @@ export default function Demo() {
           </span>
         ))}
       </span>
-    )
-  }
+    );
+  };
 
   // Empty state - centered input
   if (!hasMessages) {
     return (
-      <div className="h-screen overflow-hidden bg-white flex flex-col items-center justify-center px-4">
-        <Link
-          to="/"
-          className="absolute top-4 left-4 text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </Link>
-        
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">{scenarioConfig.name}</h1>
-        <p className="text-[#999] text-sm mb-6 max-w-md text-center">{scenarioConfig.description}</p>
-        
+      <div className="h-screen overflow-hidden bg-white flex flex-col items-center justify-center px-4 relative">
+        {/* Top bar - Back left, Settings right */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          <Link
+            to="/"
+            className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back
+          </Link>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
+            >
+              Settings
+              <svg
+                className={`w-3 h-3 transition-transform ${
+                  showSettings ? "rotate-90" : ""
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+
+            <AnimatePresence>
+              {showSettings && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-8 right-0 z-10"
+                >
+                  <div className="bg-white rounded-lg p-4 space-y-4 text-xs shadow-lg border border-[#eee] w-80">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#666]">Update frequency</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="1"
+                          max="20"
+                          value={updateFrequency}
+                          onChange={(e) =>
+                            setUpdateFrequency(Number(e.target.value))
+                          }
+                          className="w-16 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                        />
+                        <span className="w-20 text-[#999] text-right">
+                          {updateFrequency} token
+                          {updateFrequency > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#666]">Max memories</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="1"
+                          max="15"
+                          value={maxMemories}
+                          onChange={(e) =>
+                            setMaxMemories(Number(e.target.value))
+                          }
+                          className="w-16 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                        />
+                        <span className="w-20 text-[#999] text-right">
+                          {maxMemories}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#666]">Lookback window</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="10"
+                          max="150"
+                          step="10"
+                          value={lookbackTokens}
+                          onChange={(e) =>
+                            setLookbackTokens(Number(e.target.value))
+                          }
+                          className="w-16 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                        />
+                        <span className="w-20 text-[#999] text-right">
+                          {lookbackTokens} tokens
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">
+          {scenarioConfig.name}
+        </h1>
+        <p className="text-[#999] text-sm mb-6 max-w-md text-center">
+          {scenarioConfig.description}
+        </p>
+
         {/* Scenario switcher */}
         <div className="flex gap-2 mb-6">
           {Object.entries(SCENARIOS).map(([key, config]) => (
@@ -241,91 +434,26 @@ export default function Demo() {
               key={key}
               to={`/demo?scenario=${key}`}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                scenario === key 
-                  ? 'bg-[#1a1a1a] text-white' 
-                  : 'bg-[#f5f5f5] text-[#666] hover:bg-[#eee]'
+                scenario === key
+                  ? "bg-[#1a1a1a] text-white"
+                  : "bg-[#f5f5f5] text-[#666] hover:bg-[#eee]"
               }`}
             >
               {config.name}
             </Link>
           ))}
         </div>
-        
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className="text-xs text-[#999] hover:text-[#666] mb-4 flex items-center gap-1 transition-colors"
-        >
-          <svg className={`w-3 h-3 transition-transform ${showSettings ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          Settings
-        </button>
-        
-        <AnimatePresence>
-          {showSettings && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6 overflow-hidden"
-            >
-                <div className="bg-[#fafafa] rounded-lg p-4 space-y-4 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#666]">Memory update frequency</span>
-                  <div className="flex items-center gap-3 ml-12">
-                    <input
-                      type="range"
-                      min="1"
-                      max="20"
-                      value={updateFrequency}
-                      onChange={e => setUpdateFrequency(Number(e.target.value))}
-                      className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
-                    />
-                    <span className="w-16 text-[#999] text-right">{updateFrequency} token{updateFrequency > 1 ? 's' : ''}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#666]">Max memories in context</span>
-                  <div className="flex items-center gap-3 ml-12">
-                    <input
-                      type="range"
-                      min="1"
-                      max="15"
-                      value={maxMemories}
-                      onChange={e => setMaxMemories(Number(e.target.value))}
-                      className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
-                    />
-                    <span className="w-16 text-[#999] text-right">{maxMemories}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#666]">Lookback window</span>
-                  <div className="flex items-center gap-3 ml-12">
-                    <input
-                      type="range"
-                      min="10"
-                      max="150"
-                      step="10"
-                      value={lookbackTokens}
-                      onChange={e => setLookbackTokens(Number(e.target.value))}
-                      className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
-                    />
-                    <span className="w-16 text-[#999] text-right">{lookbackTokens} tokens</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
+
         <div className="w-full max-w-2xl">
           <div className="relative">
             <input
               ref={inputRef}
               type="text"
               value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey && sendMessage()
+              }
               placeholder={scenarioConfig.placeholder}
               autoFocus
               className="w-full px-4 py-3 pr-12 rounded-full bg-[#f5f5f5] text-[#1a1a1a] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ddd]"
@@ -335,49 +463,166 @@ export default function Demo() {
               disabled={!input.trim()}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-[#999] hover:text-[#666] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
               </svg>
             </button>
           </div>
-          
-          {/* Suggested question */}
-          <button
-            onClick={() => setInput(scenarioConfig.suggestedQuestion)}
-            className="mt-3 text-sm text-[#999] hover:text-[#666] transition-colors"
-          >
-            Try: "{scenarioConfig.suggestedQuestion}"
-          </button>
+
+          {/* Suggested question - centered */}
+          <div className="text-center mt-3">
+            <button
+              onClick={() => setInput(scenarioConfig.suggestedQuestion)}
+              className="text-sm text-[#999] hover:text-[#666] transition-colors"
+            >
+              Try: "{scenarioConfig.suggestedQuestion}"
+            </button>
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Chat view - input at bottom
   return (
     <div className="h-screen overflow-hidden bg-white flex flex-col">
-      {/* Back button */}
-      <div className="flex-shrink-0 px-4 pt-3">
+      {/* Top bar - Back left, Settings right */}
+      <div className="flex-shrink-0 px-4 pt-3 flex justify-between items-start">
         <Link
           to="/"
           className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Back
         </Link>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
+          >
+            <svg
+              className={`w-3 h-3 transition-transform ${
+                showSettings ? "rotate-90" : ""
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            Settings
+          </button>
+
+          <AnimatePresence>
+            {showSettings && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-8 right-0 z-10"
+              >
+                <div className="bg-white rounded-lg p-4 space-y-4 text-xs shadow-lg border border-[#eee] w-80">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">Update frequency</span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="1"
+                        max="20"
+                        value={updateFrequency}
+                        onChange={(e) =>
+                          setUpdateFrequency(Number(e.target.value))
+                        }
+                        disabled={isStreaming}
+                        className="w-16 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                      />
+                      <span className="w-20 text-[#999] text-right">
+                        {updateFrequency} token{updateFrequency > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">Max memories</span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="1"
+                        max="15"
+                        value={maxMemories}
+                        onChange={(e) => setMaxMemories(Number(e.target.value))}
+                        disabled={isStreaming}
+                        className="w-16 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                      />
+                      <span className="w-20 text-[#999] text-right">
+                        {maxMemories}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">Lookback window</span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="10"
+                        max="150"
+                        step="10"
+                        value={lookbackTokens}
+                        onChange={(e) =>
+                          setLookbackTokens(Number(e.target.value))
+                        }
+                        disabled={isStreaming}
+                        className="w-16 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
+                      />
+                      <span className="w-20 text-[#999] text-right">
+                        {lookbackTokens} tokens
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-      
+
       {/* Chat History */}
       <div ref={chatRef} className="flex-1 overflow-y-auto px-4">
         <div className="max-w-2xl mx-auto py-6 space-y-6">
           {messages.map((msg, i) => {
-            const isLastUserMessage = msg.role === 'user' && i === messages.length - 2
+            const isLastUserMessage =
+              msg.role === "user" && i === messages.length - 2;
             return (
               <div key={i} ref={isLastUserMessage ? lastMessageRef : null}>
                 {/* User message */}
-                {msg.role === 'user' && (
+                {msg.role === "user" && (
                   <div className="flex justify-end mb-4">
                     <div className="bg-[#f5f5f5] rounded-2xl px-4 py-3 max-w-[80%]">
                       <p className="text-[#1a1a1a]">{msg.content}</p>
@@ -386,21 +631,37 @@ export default function Demo() {
                 )}
 
                 {/* Assistant message */}
-                {msg.role === 'assistant' && (
+                {msg.role === "assistant" && (
                   <div className="mb-4">
                     {/* Cold start / waiting indicator */}
                     {msg.streaming && waitingForFirstToken && (
                       <div className="text-[#aaa] text-sm mb-3 pl-1 flex items-center gap-2">
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         <span className="italic">Waking up...</span>
                       </div>
                     )}
-                    
+
                     {/* Thinking */}
-                    {(msg.thinkingTimeline?.length > 0 || (msg.streaming && thinking && !waitingForFirstToken)) && (
+                    {(msg.thinkingTimeline?.length > 0 ||
+                      (msg.streaming && thinking && !waitingForFirstToken)) && (
                       <div className="text-[#aaa] text-sm mb-3 pl-1">
                         {msg.thinkingTimeline?.length > 0 ? (
                           renderTokenizedText(msg.thinkingTimeline, true)
@@ -409,26 +670,58 @@ export default function Demo() {
                         )}
                       </div>
                     )}
-                    
+
                     {/* Response */}
                     <div className="pl-1">
                       <p className="text-[#1a1a1a] whitespace-pre-wrap">
-                        {msg.timeline?.length > 0 ? (
-                          renderTokenizedText(msg.timeline)
-                        ) : (
-                          msg.content
-                        )}
+                        {msg.timeline?.length > 0
+                          ? renderTokenizedText(msg.timeline)
+                          : msg.content}
                         {msg.streaming && <span className="cursor" />}
                       </p>
+                      {msg.hitMaxTokens && (
+                        <p className="text-orange-500 text-sm mt-2 italic">
+                          ⚠️ Response truncated (hit token limit)
+                        </p>
+                      )}
                     </div>
 
                     {/* Active Memories */}
                     {msg.streaming && currentMemories.length > 0 && (
                       <div className="mt-4 pl-1">
-                        <div className="text-xs text-[#999] mb-2 flex items-center gap-2">
-                          <span>Active memories</span>
-                          {memoryUpdates > 0 && (
-                            <span className="text-[#bbb]">({memoryUpdates} updates)</span>
+                        <div className="text-xs mb-2 space-y-2">
+                          <div className="flex items-center gap-2 text-[#999]">
+                            <span>Active memories</span>
+                            {memoryUpdates > 0 && (
+                              <span className="text-[#bbb]">
+                                ({memoryUpdates} swaps)
+                              </span>
+                            )}
+                          </div>
+                          {uniqueMemoriesCount > 0 && (
+                            <div className="bg-[#f8f8f8] rounded-lg p-2 space-y-1">
+                              <div className="text-[#999]">
+                                {uniqueMemoriesCount} unique memories retrieved
+                              </div>
+                              <div className="flex items-center justify-between text-[#666]">
+                                <span>Include all memories:</span>
+                                <span className="font-mono">
+                                  {(
+                                    baseContextSize + totalUniqueMemoryTokens
+                                  ).toLocaleString()}{" "}
+                                  tokens
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-[#666]">
+                                <span>Streaming memory:</span>
+                                <span className="font-mono text-green-600">
+                                  {(
+                                    baseContextSize + currentMemoryTokens
+                                  ).toLocaleString()}{" "}
+                                  tokens
+                                </span>
+                              </div>
+                            </div>
                           )}
                         </div>
                         <div className="relative">
@@ -452,7 +745,7 @@ export default function Demo() {
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </div>
@@ -460,85 +753,15 @@ export default function Demo() {
       {/* Input Area */}
       <div className="flex-shrink-0 bg-white px-4 py-4">
         <div className="max-w-2xl mx-auto">
-          <div className="flex justify-center mb-2">
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
-            >
-              <svg className={`w-3 h-3 transition-transform ${showSettings ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Settings
-            </button>
-          </div>
-          
-          <AnimatePresence>
-            {showSettings && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-3 overflow-hidden"
-              >
-                <div className="bg-[#fafafa] rounded-lg p-3 space-y-3 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666]">Memory update frequency</span>
-                    <div className="flex items-center gap-3 ml-12">
-                      <input
-                        type="range"
-                        min="1"
-                        max="20"
-                        value={updateFrequency}
-                        onChange={e => setUpdateFrequency(Number(e.target.value))}
-                        disabled={isStreaming}
-                        className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
-                      />
-                      <span className="w-16 text-[#999] text-right">{updateFrequency} token{updateFrequency > 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666]">Max memories in context</span>
-                    <div className="flex items-center gap-3 ml-12">
-                      <input
-                        type="range"
-                        min="1"
-                        max="15"
-                        value={maxMemories}
-                        onChange={e => setMaxMemories(Number(e.target.value))}
-                        disabled={isStreaming}
-                        className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
-                      />
-                      <span className="w-16 text-[#999] text-right">{maxMemories}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666]">Lookback window</span>
-                    <div className="flex items-center gap-3 ml-12">
-                      <input
-                        type="range"
-                        min="10"
-                        max="150"
-                        step="10"
-                        value={lookbackTokens}
-                        onChange={e => setLookbackTokens(Number(e.target.value))}
-                        disabled={isStreaming}
-                        className="w-24 h-1 bg-[#e5e5e5] rounded-full appearance-none cursor-pointer disabled:opacity-50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[#666] [&::-webkit-slider-thumb]:rounded-full"
-                      />
-                      <span className="w-16 text-[#999] text-right">{lookbackTokens} tokens</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
           <div className="relative">
             <input
               ref={inputRef}
               type="text"
               value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey && sendMessage()
+              }
               placeholder="Message..."
               disabled={isStreaming}
               className="w-full px-4 py-3 pr-12 rounded-full bg-[#f5f5f5] text-[#1a1a1a] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ddd] disabled:bg-[#e8e8e8] disabled:cursor-not-allowed"
@@ -549,13 +772,38 @@ export default function Demo() {
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-[#999] hover:text-[#666] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               {isStreaming ? (
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="w-5 h-5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
                 </svg>
               )}
             </button>
@@ -578,10 +826,15 @@ export default function Demo() {
             onMouseEnter={handleTooltipEnter}
             onMouseLeave={handleTooltipLeave}
           >
-            <div className="text-xs text-[#999] mb-2">Memories at this token:</div>
+            <div className="text-xs text-[#999] mb-2">
+              Memories at this token:
+            </div>
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {hoveredMemories.map((mem, i) => (
-                <div key={i} className="text-xs text-[#666] bg-[#f5f5f5] rounded px-2 py-1.5">
+                <div
+                  key={i}
+                  className="text-xs text-[#666] bg-[#f5f5f5] rounded px-2 py-1.5"
+                >
                   {mem}
                 </div>
               ))}
@@ -590,6 +843,5 @@ export default function Demo() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
-

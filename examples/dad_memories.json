@@ -10,6 +10,21 @@
     "created_at": "2024-02-01T10:00:00Z"
   },
   {
+    "content": "Dad's been frustrated with his golf game lately. He thinks it's his equipment holding him back.",
+    "emotional_intensity": 0.7,
+    "created_at": "2024-02-15T10:00:00Z"
+  },
+  {
+    "content": "I asked Dad what he wants for his birthday and he said 'something to help my golf game would be nice.'",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-03-02T10:00:00Z"
+  },
+  {
+    "content": "Dad keeps saying his golf clubs are outdated. Especially his driver - it's ancient.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-02-12T10:00:00Z"
+  },
+  {
     "content": "Dad complained last week that his driver is warped and he keeps slicing his shots.",
     "emotional_intensity": 0.7,
     "created_at": "2024-02-20T10:00:00Z"
@@ -98,5 +113,300 @@
     "content": "Dad's dream is to play Pebble Beach someday. It's on his bucket list.",
     "emotional_intensity": 0.7,
     "created_at": "2023-07-01T10:00:00Z"
+  },
+  {
+    "content": "Mom's birthday is June 22nd. She's turning 59 this year.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-01-10T10:00:00Z"
+  },
+  {
+    "content": "Mom loves gardening. She spends hours in the backyard every weekend.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-05-15T10:00:00Z"
+  },
+  {
+    "content": "Mom's been wanting a new set of pruning shears. Hers are rusty.",
+    "emotional_intensity": 0.4,
+    "created_at": "2024-02-01T10:00:00Z"
+  },
+  {
+    "content": "For Mom's last birthday, I got her a nice cookbook. She uses it all the time.",
+    "emotional_intensity": 0.6,
+    "created_at": "2023-06-23T10:00:00Z"
+  },
+  {
+    "content": "Mom said she wants 'something practical' for her birthday this year.",
+    "emotional_intensity": 0.4,
+    "created_at": "2024-05-01T10:00:00Z"
+  },
+  {
+    "content": "Mom's favorite flowers are tulips. Dad always forgets this.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-03-01T10:00:00Z"
+  },
+  {
+    "content": "Mom hates golf. She thinks it's boring and takes up too much of Dad's time.",
+    "emotional_intensity": 0.6,
+    "created_at": "2023-08-15T10:00:00Z"
+  },
+  {
+    "content": "I started a new job at the marketing agency last month. It's been hectic but exciting.",
+    "emotional_intensity": 0.7,
+    "created_at": "2024-02-05T10:00:00Z"
+  },
+  {
+    "content": "My apartment lease is up in August. I need to decide if I'm renewing or moving.",
+    "emotional_intensity": 0.5,
+    "created_at": "2024-01-20T10:00:00Z"
+  },
+  {
+    "content": "I've been trying to learn Spanish using Duolingo. Day 45 streak so far.",
+    "emotional_intensity": 0.4,
+    "created_at": "2024-02-15T10:00:00Z"
+  },
+  {
+    "content": "My friend Sarah is getting married in October. I need to book flights to Denver.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-01-05T10:00:00Z"
+  },
+  {
+    "content": "I finally finished reading that book on stoicism. Really changed my perspective.",
+    "emotional_intensity": 0.5,
+    "created_at": "2024-02-20T10:00:00Z"
+  },
+  {
+    "content": "My car needs new brakes. The mechanic quoted me $400.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-02-28T10:00:00Z"
+  },
+  {
+    "content": "I signed up for a half marathon in May. Need to start training seriously.",
+    "emotional_intensity": 0.7,
+    "created_at": "2024-01-15T10:00:00Z"
+  },
+  {
+    "content": "My sister just announced she's pregnant. The baby is due in September.",
+    "emotional_intensity": 0.9,
+    "created_at": "2024-02-10T10:00:00Z"
+  },
+  {
+    "content": "I've been binge-watching that new sci-fi series on Netflix. It's addictive.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-25T10:00:00Z"
+  },
+  {
+    "content": "My coworker Mike recommended a great Italian restaurant downtown. Need to try it.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-18T10:00:00Z"
+  },
+  {
+    "content": "I finally paid off my student loans last month. What a relief.",
+    "emotional_intensity": 0.9,
+    "created_at": "2024-01-30T10:00:00Z"
+  },
+  {
+    "content": "The coffee maker broke this morning. Had to stop at Starbucks.",
+    "emotional_intensity": 0.4,
+    "created_at": "2024-03-01T10:00:00Z"
+  },
+  {
+    "content": "I'm thinking about getting a cat. The apartment feels lonely sometimes.",
+    "emotional_intensity": 0.5,
+    "created_at": "2024-02-12T10:00:00Z"
+  },
+  {
+    "content": "My gym membership expires next week. Debating if I should renew or try home workouts.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-22T10:00:00Z"
+  },
+  {
+    "content": "Dad made his famous chili last Sunday. It was as good as ever.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-02-25T10:00:00Z"
+  },
+  {
+    "content": "Dad used to coach my little league team. Some of my best childhood memories.",
+    "emotional_intensity": 0.8,
+    "created_at": "2023-04-15T10:00:00Z"
+  },
+  {
+    "content": "Dad still drives the same old Toyota Camry. He refuses to upgrade.",
+    "emotional_intensity": 0.3,
+    "created_at": "2023-09-10T10:00:00Z"
+  },
+  {
+    "content": "Dad has a bad knee from an old skiing injury. It acts up in cold weather.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-12-15T10:00:00Z"
+  },
+  {
+    "content": "Dad's been talking about taking a trip to Scotland to play St Andrews.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-01-25T10:00:00Z"
+  },
+  {
+    "content": "Dad loves classic rock. His favorite band is Led Zeppelin.",
+    "emotional_intensity": 0.4,
+    "created_at": "2023-07-20T10:00:00Z"
+  },
+  {
+    "content": "Dad grills steaks every Fourth of July. It's become a family tradition.",
+    "emotional_intensity": 0.7,
+    "created_at": "2023-07-05T10:00:00Z"
+  },
+  {
+    "content": "Dad's allergic to shellfish. We always have to check restaurant menus carefully.",
+    "emotional_intensity": 0.4,
+    "created_at": "2023-08-20T10:00:00Z"
+  },
+  {
+    "content": "Dad worked at Boeing for 35 years before retiring. He was a mechanical engineer.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-06-15T10:00:00Z"
+  },
+  {
+    "content": "Mom and Dad are planning a cruise to Alaska for their anniversary.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-01-08T10:00:00Z"
+  },
+  {
+    "content": "I remember Dad teaching me to ride a bike in the driveway. I was terrified.",
+    "emotional_intensity": 0.7,
+    "created_at": "2023-05-10T10:00:00Z"
+  },
+  {
+    "content": "Dad always falls asleep during movies. It's a running joke in our family.",
+    "emotional_intensity": 0.4,
+    "created_at": "2023-11-25T10:00:00Z"
+  },
+  {
+    "content": "The weather has been terrible this week. Rain every single day.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-27T10:00:00Z"
+  },
+  {
+    "content": "I need to call the dentist. It's been way too long since my last checkup.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-15T10:00:00Z"
+  },
+  {
+    "content": "My neighbor's dog won't stop barking at night. I'm losing sleep.",
+    "emotional_intensity": 0.5,
+    "created_at": "2024-02-20T10:00:00Z"
+  },
+  {
+    "content": "I tried that new Thai place on 5th street. The pad thai was mediocre.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-08T10:00:00Z"
+  },
+  {
+    "content": "My phone battery is dying so fast lately. Might need to replace it.",
+    "emotional_intensity": 0.4,
+    "created_at": "2024-02-25T10:00:00Z"
+  },
+  {
+    "content": "I've been meaning to clean out my closet. There's stuff from college still in there.",
+    "emotional_intensity": 0.2,
+    "created_at": "2024-01-28T10:00:00Z"
+  },
+  {
+    "content": "Mom makes the best apple pie. She uses grandma's secret recipe.",
+    "emotional_intensity": 0.7,
+    "created_at": "2023-11-24T10:00:00Z"
+  },
+  {
+    "content": "Mom's been taking pottery classes. She made me a lopsided mug I love.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-01-12T10:00:00Z"
+  },
+  {
+    "content": "Mom worries too much about everything. Dad says she's always been that way.",
+    "emotional_intensity": 0.4,
+    "created_at": "2023-10-05T10:00:00Z"
+  },
+  {
+    "content": "Mom got a new puppy last month. A golden retriever named Biscuit.",
+    "emotional_intensity": 0.8,
+    "created_at": "2024-02-01T10:00:00Z"
+  },
+  {
+    "content": "The family reunion is scheduled for August at Uncle Bob's lake house.",
+    "emotional_intensity": 0.5,
+    "created_at": "2024-01-20T10:00:00Z"
+  },
+  {
+    "content": "My brother got promoted to senior manager. Mom won't stop bragging about it.",
+    "emotional_intensity": 0.5,
+    "created_at": "2024-02-05T10:00:00Z"
+  },
+  {
+    "content": "Grandma's 90th birthday is coming up. We're planning a big party.",
+    "emotional_intensity": 0.7,
+    "created_at": "2024-02-10T10:00:00Z"
+  },
+  {
+    "content": "Dad bought Mom a Peloton for Christmas. She's actually using it daily.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-12-27T10:00:00Z"
+  },
+  {
+    "content": "I had a weird dream about flying last night. Woke up feeling strange.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-03-01T10:00:00Z"
+  },
+  {
+    "content": "My favorite coffee shop closed down. I'm devastated.",
+    "emotional_intensity": 0.6,
+    "created_at": "2024-02-18T10:00:00Z"
+  },
+  {
+    "content": "I should really start meditating. Everyone says it helps with stress.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-22T10:00:00Z"
+  },
+  {
+    "content": "The stock market has been crazy lately. Glad I'm not checking my 401k.",
+    "emotional_intensity": 0.4,
+    "created_at": "2024-02-28T10:00:00Z"
+  },
+  {
+    "content": "I bought a new plant for my desk. Hoping I don't kill this one too.",
+    "emotional_intensity": 0.3,
+    "created_at": "2024-02-14T10:00:00Z"
+  },
+  {
+    "content": "Dad taught me how to change a tire when I was 16. Said it was essential life skills.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-04-20T10:00:00Z"
+  },
+  {
+    "content": "Dad's shed is full of tools he never uses. Mom wants him to clean it out.",
+    "emotional_intensity": 0.3,
+    "created_at": "2023-09-25T10:00:00Z"
+  },
+  {
+    "content": "Dad has a collection of old vinyl records. Mostly 70s rock albums.",
+    "emotional_intensity": 0.4,
+    "created_at": "2023-08-10T10:00:00Z"
+  },
+  {
+    "content": "Dad refuses to use the dishwasher. He insists on hand washing everything.",
+    "emotional_intensity": 0.3,
+    "created_at": "2023-10-15T10:00:00Z"
+  },
+  {
+    "content": "Dad's been growing tomatoes in the garden. They're actually pretty good.",
+    "emotional_intensity": 0.4,
+    "created_at": "2023-08-25T10:00:00Z"
+  },
+  {
+    "content": "Dad makes terrible jokes. We groan but secretly love them.",
+    "emotional_intensity": 0.5,
+    "created_at": "2023-07-30T10:00:00Z"
+  },
+  {
+    "content": "Dad's morning routine is exactly the same every day. Coffee at 6am sharp.",
+    "emotional_intensity": 0.3,
+    "created_at": "2023-11-10T10:00:00Z"
   }
 ]

@@ -536,7 +536,30 @@ class TutorService:
                 current_mem_contents = [m.content for m in memories]
                 yield sse({'type': 'memories', 'memories': current_mem_contents})
                 
-                # Build prompt
+                # Track ALL unique memories seen and their token counts
+                all_unique_memories = set(current_mem_contents)
+                memory_token_cache = {}  # cache token counts per memory
+                
+                def get_memory_tokens(mem_content):
+                    if mem_content not in memory_token_cache:
+                        memory_token_cache[mem_content] = len(tokenizer.encode(mem_content))
+                    return memory_token_cache[mem_content]
+                
+                # Calculate initial memory tokens
+                for mem in current_mem_contents:
+                    get_memory_tokens(mem)
+                
+                # First, calculate BASE context (without memories)
+                base_messages = [
+                    {"role": "system", "content": system_prompt},
+                ]
+                for h in history[-6:]:
+                    base_messages.append(h)
+                base_messages.append({"role": "user", "content": message})
+                base_text = tokenizer.apply_chat_template(base_messages, tokenize=False, add_generation_prompt=True)
+                base_context_size = len(tokenizer.encode(base_text))
+                
+                # Build full prompt with memories
                 memory_context = format_memories(memories, memory_prefix)
                 messages = [
                     {"role": "system", "content": system_prompt},
@@ -549,13 +572,26 @@ class TutorService:
                 text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
                 input_ids = tokenizer.encode(text, return_tensors="pt").to(model.device)
                 
-                max_tokens = 400
+                max_tokens = 1500
                 # update_every_n comes from request
                 
                 all_tokens = []
                 in_thinking = False
                 timeline = []
                 token_idx = 0
+                context_size_history = []
+                
+                # Track initial context size
+                current_memory_tokens = sum(get_memory_tokens(m) for m in current_mem_contents)
+                total_unique_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)
+                context_size_history.append({'token_idx': 0, 'size': input_ids.shape[1]})
+                yield sse({
+                    'type': 'context_size', 
+                    'base_context_size': base_context_size,
+                    'current_memory_tokens': current_memory_tokens,
+                    'total_unique_memory_tokens': total_unique_memory_tokens,
+                    'unique_memories': len(all_unique_memories)
+                })
                 
                 with torch.no_grad():
                     current_ids = input_ids
@@ -601,23 +637,21 @@ class TutorService:
                         if tokenizer.eos_token_id in new_token_ids:
                             break
                         
-                        # Re-retrieve memories
+                        # Re-retrieve memories using ONLY the recent generated tokens
+                        # This allows the model's reasoning to drive memory retrieval
                         lookback_text = tokenizer.decode(all_tokens[-lookback_tokens:], skip_special_tokens=True)
-                        new_query = message + " " + lookback_text
                         
-                        new_memories = pool.retrieve(new_query, max_memories=max_memories)
+                        new_memories = pool.retrieve(lookback_text, max_memories=max_memories)
                         new_mem_contents = [m.content for m in new_memories]
                         
                         if set(new_mem_contents) != set(current_mem_contents):
                             added = [m for m in new_mem_contents if m not in current_mem_contents]
                             removed = [m for m in current_mem_contents if m not in new_mem_contents]
                             
-                            yield sse({
-                                'type': 'memory_update',
-                                'memories': new_mem_contents,
-                                'added': added,
-                                'removed': removed,
-                            })
+                            # Track all unique memories seen
+                            for mem in new_mem_contents:
+                                all_unique_memories.add(mem)
+                                get_memory_tokens(mem)  # cache token count
                             
                             # Raw token concatenation fix
                             current_mem_contents = new_mem_contents
@@ -635,10 +669,32 @@ class TutorService:
                             
                             generated_tensor = torch.tensor([all_tokens], device=model.device)
                             current_ids = torch.cat([new_prefix_ids, generated_tensor], dim=1)
+                            
+                            # Track context size after memory swap
+                            new_context_size = current_ids.shape[1]
+                            current_memory_tokens = sum(get_memory_tokens(m) for m in current_mem_contents)
+                            total_unique_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)
+                            context_size_history.append({'token_idx': len(all_tokens), 'size': new_context_size})
+                            
+                            yield sse({
+                                'type': 'memory_update',
+                                'memories': new_mem_contents,
+                                'added': added,
+                                'removed': removed,
+                                'base_context_size': base_context_size,
+                                'current_memory_tokens': current_memory_tokens,
+                                'total_unique_memory_tokens': total_unique_memory_tokens,
+                                'unique_memories': len(all_unique_memories),
+                            })
                         else:
                             current_ids = outputs
                 
+                # Check if we hit max tokens without EOS
+                hit_max = len(all_tokens) >= max_tokens and tokenizer.eos_token_id not in all_tokens[-10:]
+                
                 yield sse({'type': 'timeline', 'data': timeline})
+                if hit_max:
+                    yield sse({'type': 'max_tokens', 'limit': max_tokens})
                 yield sse({'type': 'done'})
             
             return StreamingResponse(
