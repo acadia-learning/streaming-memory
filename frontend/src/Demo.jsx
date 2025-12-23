@@ -1123,21 +1123,6 @@ export default function Demo() {
                 </div>
               </div>
 
-              {/* Summary */}
-              {tokenHistory.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-[#eee] text-center text-sm text-[#666]">
-                  <span className="text-green-600 font-medium">
-                    {Math.round(
-                      (1 -
-                        tokenHistory[tokenHistory.length - 1].streaming /
-                          tokenHistory[tokenHistory.length - 1].all) *
-                        100
-                    )}
-                    % fewer tokens
-                  </span>{" "}
-                  than including all memories
-                </div>
-              )}
             </motion.div>
           </motion.div>
         )}
