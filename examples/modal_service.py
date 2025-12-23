@@ -412,6 +412,7 @@ class TutorService:
         
         # Create a pool for each scenario
         self.pools = {}
+        self.pool_total_tokens = {}  # Total tokens if ALL memories were included
         
         for scenario_name, scenario_config in SCENARIOS.items():
             print(f"📚 Loading {scenario_name} memories...")
@@ -454,7 +455,13 @@ class TutorService:
                 )
             
             self.pools[scenario_name] = pool
-            print(f"  ✅ Loaded {len(memories)} {scenario_name} memories")
+            
+            # Calculate total tokens for ALL memories in this pool
+            all_memory_text = "\n".join([f"- {m['content']}" for m in memories])
+            total_pool_tokens = len(self.tokenizer.encode(all_memory_text))
+            self.pool_total_tokens[scenario_name] = total_pool_tokens
+            
+            print(f"  ✅ Loaded {len(memories)} {scenario_name} memories ({total_pool_tokens} tokens)")
         
         print("🟢 Container ready - responses will be fast!")
     
@@ -513,6 +520,7 @@ class TutorService:
             model = self.model
             tokenizer = self.tokenizer
             pool = self.pools[scenario_name]
+            all_memories_tokens = self.pool_total_tokens[scenario_name]
             
             def generate():
                 # SSE format: "data: {...}\n\n"
@@ -579,18 +587,27 @@ class TutorService:
                 in_thinking = False
                 timeline = []
                 token_idx = 0
-                context_size_history = []
+                token_history = []  # Track token counts over time for graph
                 
                 # Track initial context size
                 current_memory_tokens = sum(get_memory_tokens(m) for m in current_mem_contents)
-                total_unique_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)
-                context_size_history.append({'token_idx': 0, 'size': input_ids.shape[1]})
+                rag_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)  # unique seen so far
+                
+                token_history.append({
+                    'token_idx': 0,
+                    'streaming': base_context_size + current_memory_tokens,
+                    'rag': base_context_size + rag_memory_tokens,
+                    'all': base_context_size + all_memories_tokens,
+                })
+                
                 yield sse({
                     'type': 'context_size', 
                     'base_context_size': base_context_size,
                     'current_memory_tokens': current_memory_tokens,
-                    'total_unique_memory_tokens': total_unique_memory_tokens,
-                    'unique_memories': len(all_unique_memories)
+                    'rag_memory_tokens': rag_memory_tokens,
+                    'all_memories_tokens': all_memories_tokens,
+                    'unique_memories': len(all_unique_memories),
+                    'token_history': token_history,
                 })
                 
                 with torch.no_grad():
@@ -671,10 +688,15 @@ class TutorService:
                             current_ids = torch.cat([new_prefix_ids, generated_tensor], dim=1)
                             
                             # Track context size after memory swap
-                            new_context_size = current_ids.shape[1]
                             current_memory_tokens = sum(get_memory_tokens(m) for m in current_mem_contents)
-                            total_unique_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)
-                            context_size_history.append({'token_idx': len(all_tokens), 'size': new_context_size})
+                            rag_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)
+                            
+                            token_history.append({
+                                'token_idx': len(all_tokens),
+                                'streaming': base_context_size + current_memory_tokens,
+                                'rag': base_context_size + rag_memory_tokens,
+                                'all': base_context_size + all_memories_tokens,
+                            })
                             
                             yield sse({
                                 'type': 'memory_update',
@@ -683,8 +705,10 @@ class TutorService:
                                 'removed': removed,
                                 'base_context_size': base_context_size,
                                 'current_memory_tokens': current_memory_tokens,
-                                'total_unique_memory_tokens': total_unique_memory_tokens,
+                                'rag_memory_tokens': rag_memory_tokens,
+                                'all_memories_tokens': all_memories_tokens,
                                 'unique_memories': len(all_unique_memories),
+                                'token_history': token_history,
                             })
                         else:
                             current_ids = outputs
