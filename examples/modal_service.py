@@ -63,7 +63,9 @@ When memories are provided, use them naturally to inform your responses. You kno
 
 Think step by step in <think>...</think> tags before responding.
 
-Speak as yourself - the tutor who has this history with Alex.""",
+Speak as yourself - the tutor who has this history with Alex.
+
+Important: Do not use emojis in your responses.""",
         "memory_file": "/app/memories.json",
         "memory_prefix": "[My memories from working with Alex:]",
     },
@@ -76,7 +78,9 @@ When memories are provided, use them naturally to inform your responses. Make co
 
 Think step by step in <think>...</think> tags before responding.
 
-Be warm and helpful, like a thoughtful friend who knows them well.""",
+Be warm and helpful, like a thoughtful friend who knows them well.
+
+Important: Do not use emojis in your responses.""",
         "memory_file": "/app/dad_memories.json",
         "memory_prefix": "[User's memories and notes:]",
     },
@@ -662,17 +666,17 @@ class TutorService:
                         
                         token_history.append({
                             'token_idx': generated_token_count,
-                            'streaming': base_context_size + current_memory_tokens + generated_token_count,
-                            'rag': base_context_size + rag_memory_tokens + generated_token_count,
-                            'all': base_context_size + all_memories_tokens + generated_token_count,
+                            'streaming': base_context_size + current_memory_tokens,
+                            'rag': base_context_size + rag_memory_tokens,
+                            'all': base_context_size + all_memories_tokens,
                         })
                         
                         yield sse({
                             'type': 'context_update',
                             'generated_tokens': generated_token_count,
-                            'streaming': base_context_size + current_memory_tokens + generated_token_count,
-                            'rag': base_context_size + rag_memory_tokens + generated_token_count,
-                            'all': base_context_size + all_memories_tokens + generated_token_count,
+                            'streaming': base_context_size + current_memory_tokens,
+                            'rag': base_context_size + rag_memory_tokens,
+                            'all': base_context_size + all_memories_tokens,
                         })
                         
                         # Re-retrieve memories using ONLY the recent generated tokens
