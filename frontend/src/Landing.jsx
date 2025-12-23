@@ -257,7 +257,8 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold text-[#1a1a1a] mb-6 leading-tight">
-              Streaming Memory
+              Memory at the <br />
+              speed of thought
             </h1>
             <p className="text-lg text-[#666] mb-4">
               For an LLM to remember things about you—how you learn, what you've
