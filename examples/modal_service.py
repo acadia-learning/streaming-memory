@@ -589,7 +589,7 @@ class TutorService:
                 token_idx = 0
                 token_history = []  # Track token counts over time for graph
                 
-                # Track initial context size
+                # Track initial context size (0 generated tokens)
                 current_memory_tokens = sum(get_memory_tokens(m) for m in current_mem_contents)
                 rag_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)  # unique seen so far
                 
@@ -598,6 +598,7 @@ class TutorService:
                     'streaming': base_context_size + current_memory_tokens,
                     'rag': base_context_size + rag_memory_tokens,
                     'all': base_context_size + all_memories_tokens,
+                    'generated': 0,
                 })
                 
                 yield sse({
@@ -653,6 +654,26 @@ class TutorService:
                         
                         if tokenizer.eos_token_id in new_token_ids:
                             break
+                        
+                        # Update token history with current generated token count
+                        generated_token_count = len(all_tokens)
+                        current_memory_tokens = sum(get_memory_tokens(m) for m in current_mem_contents)
+                        rag_memory_tokens = sum(get_memory_tokens(m) for m in all_unique_memories)
+                        
+                        token_history.append({
+                            'token_idx': generated_token_count,
+                            'streaming': base_context_size + current_memory_tokens + generated_token_count,
+                            'rag': base_context_size + rag_memory_tokens + generated_token_count,
+                            'all': base_context_size + all_memories_tokens + generated_token_count,
+                        })
+                        
+                        yield sse({
+                            'type': 'context_update',
+                            'generated_tokens': generated_token_count,
+                            'streaming': base_context_size + current_memory_tokens + generated_token_count,
+                            'rag': base_context_size + rag_memory_tokens + generated_token_count,
+                            'all': base_context_size + all_memories_tokens + generated_token_count,
+                        })
                         
                         # Re-retrieve memories using ONLY the recent generated tokens
                         # This allows the model's reasoning to drive memory retrieval

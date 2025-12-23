@@ -47,7 +47,7 @@ export default function Demo() {
   const [hoveredMemories, setHoveredMemories] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [updateFrequency, setUpdateFrequency] = useState(1);
-  const [maxMemories, setMaxMemories] = useState(5);
+  const [maxMemories, setMaxMemories] = useState(8);
   const [lookbackTokens, setLookbackTokens] = useState(60);
   const [baseContextSize, setBaseContextSize] = useState(0);
   const [currentMemoryTokens, setCurrentMemoryTokens] = useState(0);
@@ -56,6 +56,10 @@ export default function Demo() {
   const [uniqueMemoriesCount, setUniqueMemoriesCount] = useState(0);
   const [tokenHistory, setTokenHistory] = useState([]);
   const [showGraph, setShowGraph] = useState(false);
+  const [generatedTokens, setGeneratedTokens] = useState(0);
+  const [liveStreamingTokens, setLiveStreamingTokens] = useState(0);
+  const [liveRagTokens, setLiveRagTokens] = useState(0);
+  const [liveAllTokens, setLiveAllTokens] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [waitingForFirstToken, setWaitingForFirstToken] = useState(false);
   const chatRef = useRef(null);
@@ -98,6 +102,10 @@ export default function Demo() {
     setUniqueMemoriesCount(0);
     setTokenHistory([]);
     setShowGraph(false);
+    setGeneratedTokens(0);
+    setLiveStreamingTokens(0);
+    setLiveRagTokens(0);
+    setLiveAllTokens(0);
 
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
@@ -194,6 +202,20 @@ export default function Demo() {
                 setAllMemoriesTokens(data.all_memories_tokens);
               if (data.unique_memories)
                 setUniqueMemoriesCount(data.unique_memories);
+              if (data.token_history) {
+                latestTokenHistory = data.token_history;
+                setTokenHistory(data.token_history);
+              }
+            } else if (data.type === "context_update") {
+              // Live token count updates as model generates
+              if (data.generated_tokens !== undefined)
+                setGeneratedTokens(data.generated_tokens);
+              if (data.streaming !== undefined)
+                setLiveStreamingTokens(data.streaming);
+              if (data.rag !== undefined)
+                setLiveRagTokens(data.rag);
+              if (data.all !== undefined)
+                setLiveAllTokens(data.all);
               if (data.token_history) {
                 latestTokenHistory = data.token_history;
                 setTokenHistory(data.token_history);
@@ -713,8 +735,18 @@ export default function Demo() {
                           }}
                           className="mt-2 text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
                           </svg>
                           View token usage
                         </button>
@@ -733,27 +765,27 @@ export default function Demo() {
                               </span>
                             )}
                           </div>
-                          {allMemoriesTokens > 0 && (
+                          {liveAllTokens > 0 && (
                             <div className="bg-[#f8f8f8] rounded-lg p-2 space-y-1.5">
                               <div className="text-[#999]">
-                                {uniqueMemoriesCount} memories retrieved this run
+                                {uniqueMemoriesCount} memories retrieved • {generatedTokens} tokens generated
                               </div>
                               <div className="flex items-center justify-between text-[#666]">
                                 <span>All memories:</span>
                                 <span className="font-mono text-red-400">
-                                  {(baseContextSize + allMemoriesTokens).toLocaleString()} tokens
+                                  {liveAllTokens.toLocaleString()} tokens
                                 </span>
                               </div>
                               <div className="flex items-center justify-between text-[#666]">
                                 <span>RAG (retrieved once):</span>
                                 <span className="font-mono text-orange-400">
-                                  {(baseContextSize + ragMemoryTokens).toLocaleString()} tokens
+                                  {liveRagTokens.toLocaleString()} tokens
                                 </span>
                               </div>
                               <div className="flex items-center justify-between text-[#666]">
                                 <span>Streaming memory:</span>
                                 <span className="font-mono text-green-600">
-                                  {(baseContextSize + currentMemoryTokens).toLocaleString()} tokens
+                                  {liveStreamingTokens.toLocaleString()} tokens
                                 </span>
                               </div>
                             </div>
@@ -903,18 +935,32 @@ export default function Demo() {
                   onClick={() => setShowGraph(false)}
                   className="text-[#999] hover:text-[#666] transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               {/* SVG Graph */}
               <div className="relative h-64 mt-4">
-                <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="none">
+                <svg
+                  viewBox="0 0 500 200"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
                   {/* Y-axis labels */}
                   {(() => {
-                    const maxVal = Math.max(...tokenHistory.map(h => h.all));
+                    const maxVal = Math.max(...tokenHistory.map((h) => h.all));
                     const steps = [0, 0.25, 0.5, 0.75, 1];
                     return steps.map((step, i) => (
                       <text
@@ -927,43 +973,95 @@ export default function Demo() {
                       </text>
                     ));
                   })()}
-                  
+
                   {/* Grid lines */}
-                  <line x1="45" y1="10" x2="45" y2="190" stroke="#eee" strokeWidth="1" />
-                  <line x1="45" y1="190" x2="495" y2="190" stroke="#eee" strokeWidth="1" />
+                  <line
+                    x1="45"
+                    y1="10"
+                    x2="45"
+                    y2="190"
+                    stroke="#eee"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="45"
+                    y1="190"
+                    x2="495"
+                    y2="190"
+                    stroke="#eee"
+                    strokeWidth="1"
+                  />
                   {[0.25, 0.5, 0.75].map((step, i) => (
-                    <line key={i} x1="45" y1={190 - step * 180} x2="495" y2={190 - step * 180} stroke="#f5f5f5" strokeWidth="1" />
+                    <line
+                      key={i}
+                      x1="45"
+                      y1={190 - step * 180}
+                      x2="495"
+                      y2={190 - step * 180}
+                      stroke="#f5f5f5"
+                      strokeWidth="1"
+                    />
                   ))}
-                  
+
                   {/* Lines */}
                   {(() => {
-                    const maxVal = Math.max(...tokenHistory.map(h => h.all));
+                    const maxVal = Math.max(...tokenHistory.map((h) => h.all));
                     const xScale = 450 / (tokenHistory.length - 1 || 1);
                     const yScale = 180 / maxVal;
-                    
-                    const allPath = tokenHistory.map((h, i) => 
-                      `${i === 0 ? 'M' : 'L'} ${45 + i * xScale} ${190 - h.all * yScale}`
-                    ).join(' ');
-                    
-                    const ragPath = tokenHistory.map((h, i) => 
-                      `${i === 0 ? 'M' : 'L'} ${45 + i * xScale} ${190 - h.rag * yScale}`
-                    ).join(' ');
-                    
-                    const streamingPath = tokenHistory.map((h, i) => 
-                      `${i === 0 ? 'M' : 'L'} ${45 + i * xScale} ${190 - h.streaming * yScale}`
-                    ).join(' ');
-                    
+
+                    const allPath = tokenHistory
+                      .map(
+                        (h, i) =>
+                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${
+                            190 - h.all * yScale
+                          }`
+                      )
+                      .join(" ");
+
+                    const ragPath = tokenHistory
+                      .map(
+                        (h, i) =>
+                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${
+                            190 - h.rag * yScale
+                          }`
+                      )
+                      .join(" ");
+
+                    const streamingPath = tokenHistory
+                      .map(
+                        (h, i) =>
+                          `${i === 0 ? "M" : "L"} ${45 + i * xScale} ${
+                            190 - h.streaming * yScale
+                          }`
+                      )
+                      .join(" ");
+
                     return (
                       <>
-                        <path d={allPath} fill="none" stroke="#f87171" strokeWidth="2" />
-                        <path d={ragPath} fill="none" stroke="#fb923c" strokeWidth="2" />
-                        <path d={streamingPath} fill="none" stroke="#22c55e" strokeWidth="2" />
+                        <path
+                          d={allPath}
+                          fill="none"
+                          stroke="#f87171"
+                          strokeWidth="2"
+                        />
+                        <path
+                          d={ragPath}
+                          fill="none"
+                          stroke="#fb923c"
+                          strokeWidth="2"
+                        />
+                        <path
+                          d={streamingPath}
+                          fill="none"
+                          stroke="#22c55e"
+                          strokeWidth="2"
+                        />
                       </>
                     );
                   })()}
                 </svg>
               </div>
-              
+
               {/* Legend */}
               <div className="flex gap-6 justify-center mt-4 text-sm">
                 <div className="flex items-center gap-2">
@@ -979,14 +1077,20 @@ export default function Demo() {
                   <span className="text-[#666]">Streaming memory</span>
                 </div>
               </div>
-              
+
               {/* Summary */}
               {tokenHistory.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-[#eee] text-center text-sm text-[#666]">
                   <span className="text-green-600 font-medium">
-                    {Math.round((1 - tokenHistory[tokenHistory.length - 1].streaming / tokenHistory[tokenHistory.length - 1].all) * 100)}% fewer tokens
-                  </span>
-                  {' '}than including all memories
+                    {Math.round(
+                      (1 -
+                        tokenHistory[tokenHistory.length - 1].streaming /
+                          tokenHistory[tokenHistory.length - 1].all) *
+                        100
+                    )}
+                    % fewer tokens
+                  </span>{" "}
+                  than including all memories
                 </div>
               )}
             </motion.div>
