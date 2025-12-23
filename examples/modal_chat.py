@@ -344,7 +344,7 @@ HTML_PAGE = """
 
 @app.cls(
     image=image,
-    gpu="A100",
+    gpu="L4",  # Cheaper than A100, still has 24GB VRAM
     timeout=600,
     scaledown_window=300,
     secrets=[modal.Secret.from_name("openai-secret")],
