@@ -16,7 +16,7 @@ const API_URL =
 const DEMO_CONFIG = {
   name: "Family Assistant",
   description:
-    "Your assistant has access to sample memories and notes. Ask for help thinking through decisions.",
+    "Your assistant has access to ~100 sample memories and notes. Ask for help thinking through decisions.",
   placeholder: "Ask for advice or help planning...",
   suggestedQuestions: [
     "What should I get my dad for his birthday?",
