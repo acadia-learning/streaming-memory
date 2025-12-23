@@ -57,3 +57,4 @@ frontend/.vercel/
 
 # Modal
 .modal/
+.vercel
