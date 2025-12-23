@@ -221,9 +221,9 @@ export default function App() {
               className="mb-6 overflow-hidden"
             >
                 <div className="bg-[#fafafa] rounded-lg p-4 space-y-4 text-xs">
-                <div className="flex items-center justify-between gap-8">
+                <div className="flex items-center justify-between">
                   <span className="text-[#666]">Memory update frequency</span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 ml-12">
                     <input
                       type="range"
                       min="1"
@@ -235,9 +235,9 @@ export default function App() {
                     <span className="w-16 text-[#999] text-right">{updateFrequency} token{updateFrequency > 1 ? 's' : ''}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-8">
+                <div className="flex items-center justify-between">
                   <span className="text-[#666]">Max memories in context</span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 ml-12">
                     <input
                       type="range"
                       min="1"
@@ -385,9 +385,9 @@ export default function App() {
                 className="mb-3 overflow-hidden"
               >
                 <div className="bg-[#fafafa] rounded-lg p-3 space-y-3 text-xs">
-                  <div className="flex items-center justify-between gap-8">
+                  <div className="flex items-center justify-between">
                     <span className="text-[#666]">Memory update frequency</span>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 ml-12">
                       <input
                         type="range"
                         min="1"
@@ -400,9 +400,9 @@ export default function App() {
                       <span className="w-16 text-[#999] text-right">{updateFrequency} token{updateFrequency > 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-8">
+                  <div className="flex items-center justify-between">
                     <span className="text-[#666]">Max memories in context</span>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 ml-12">
                       <input
                         type="range"
                         min="1"
