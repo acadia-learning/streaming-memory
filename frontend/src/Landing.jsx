@@ -402,11 +402,6 @@ export default function Landing() {
               changes when and how often.
             </p>
 
-            {/* GIF placeholder */}
-            <div className="my-8 bg-[#fafafa] border border-[#eee] rounded-lg p-8 text-center">
-              <div className="text-xs text-[#999]">[Demo GIF coming soon]</div>
-            </div>
-
             <EfficiencyGraph />
           </motion.div>
         </section>
