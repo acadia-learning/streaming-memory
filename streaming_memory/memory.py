@@ -225,12 +225,15 @@ class MemoryPool:
         return mem_norms @ query_norm
     
     def _recency_factor(self, memory: Memory, now: datetime) -> float:
-        """Compute recency factor with exponential decay."""
-        if memory.last_retrieved is None:
-            hours = (now - memory.created_at).total_seconds() / 3600
-            return 0.3 * np.exp(-hours / self.recency_decay_hours)
+        """
+        Compute recency factor with exponential decay.
         
-        hours = (now - memory.last_retrieved).total_seconds() / 3600
+        Uses last_retrieved if available, otherwise uses created_at (event date).
+        This ensures memories about recent events rank higher even if never retrieved.
+        """
+        # Use event date (created_at) if never retrieved, otherwise use last_retrieved
+        reference_time = memory.last_retrieved or memory.created_at
+        hours = (now - reference_time).total_seconds() / 3600
         return float(np.exp(-hours / self.recency_decay_hours))
     
     def _repetition_factor(self, memory: Memory) -> float:

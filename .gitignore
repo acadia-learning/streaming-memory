@@ -46,7 +46,6 @@ Thumbs.db
 
 # Project specific
 results/
-aryan.json
 
 # Frontend
 frontend/node_modules/

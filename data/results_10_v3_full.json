@@ -1,0 +1,192 @@
+[
+  {
+    "question_id": "gpt4_2655b836",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe first issue you had with your new car after its first service was a problem with the GPS system, which required a dealership visit to replace the entire system. This occurred on March 22nd, shortly after your March 15th service.",
+    "expected_answer": "GPS system not functioning correctly",
+    "memory_swaps": 22,
+    "thinking_tokens": 200,
+    "response_tokens": 52,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 0.7142857142857143,
+      "memory_precision": 1.0,
+      "memory_hits": 15,
+      "memory_relevant": 21,
+      "session_recall": 1.0,
+      "session_hits": 3,
+      "session_relevant": 3
+    }
+  },
+  {
+    "question_id": "gpt4_2487a7cb",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe \"Data Analysis using Python\" webinar was attended first, as it is noted to have occurred two months ago, while the \"Effective Time Management\" workshop is mentioned in the context of your recent focus on learning new skills.",
+    "expected_answer": "'Data Analysis using Python' webinar",
+    "memory_swaps": 14,
+    "thinking_tokens": 183,
+    "response_tokens": 46,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 0.9285714285714286,
+      "memory_precision": 1.0,
+      "memory_hits": 13,
+      "memory_relevant": 14,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "gpt4_76048e76",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nYou took care of the bike first in February. The bike had gear issues in mid-February, requiring repairs, while the car was washed on February 27th.",
+    "expected_answer": "bike",
+    "memory_swaps": 6,
+    "thinking_tokens": 321,
+    "response_tokens": 36,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 0.75,
+      "memory_precision": 1.0,
+      "memory_hits": 12,
+      "memory_relevant": 16,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "gpt4_2312f94c",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "",
+    "expected_answer": "Samsung Galaxy S22",
+    "memory_swaps": 116,
+    "thinking_tokens": 2047,
+    "response_tokens": 0,
+    "hit_max_tokens": true,
+    "retrieval_metrics": {
+      "memory_recall": 0.8235294117647058,
+      "memory_precision": 1.0,
+      "memory_hits": 14,
+      "memory_relevant": 17,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "0bb5a684",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nYou attended the workshop on January 10th and had your team meeting on January 17th. The workshop was **7 days before** the meeting.",
+    "expected_answer": "7 days. 8 days (including the last day) is also acceptable.",
+    "memory_swaps": 14,
+    "thinking_tokens": 179,
+    "response_tokens": 34,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 1.0,
+      "memory_precision": 1.0,
+      "memory_hits": 14,
+      "memory_relevant": 14,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "08f4fc43",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe Sunday mass at St. Mary's Church was on January 2nd, and the Ash Wednesday service was on February 1st. Between these dates, **30 days had passed** (from January 3rd to February 1st).",
+    "expected_answer": "30 days. 31 days (including the last day) is also acceptable.",
+    "memory_swaps": 17,
+    "thinking_tokens": 790,
+    "response_tokens": 52,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 1.0,
+      "memory_precision": 1.0,
+      "memory_hits": 11,
+      "memory_relevant": 11,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "2c63a862",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe user started working with Rachel on February 15th and saw a house they loved on March 1st. This took **15 days**.",
+    "expected_answer": "14 days. 15 days (including the last day) is also acceptable.",
+    "memory_swaps": 35,
+    "thinking_tokens": 896,
+    "response_tokens": 33,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 1.0,
+      "memory_precision": 1.0,
+      "memory_hits": 11,
+      "memory_relevant": 11,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "gpt4_385a5000",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe tomatoes were started first. The user began seedlings (including tomatoes) on February 20th, while marigold seeds were started on March 3rd.",
+    "expected_answer": "Tomatoes",
+    "memory_swaps": 0,
+    "thinking_tokens": 181,
+    "response_tokens": 36,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 1.0,
+      "memory_precision": 1.0,
+      "memory_hits": 10,
+      "memory_relevant": 10,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "2a1811e2",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe Hindu festival of Holi was celebrated on **February 26**, and the Sunday mass at St. Mary's Church occurred on **March 19**. The number of days between these dates is **21 days** (from February 27 to March 18).",
+    "expected_answer": "21 days. 22 days (including the last day) is also acceptable.",
+    "memory_swaps": 34,
+    "thinking_tokens": 874,
+    "response_tokens": 60,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 1.0,
+      "memory_precision": 1.0,
+      "memory_hits": 12,
+      "memory_relevant": 12,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  },
+  {
+    "question_id": "bbf86515",
+    "question_type": "temporal-reasoning",
+    "hypothesis": "\n\nThe \"Turbocharged Tuesdays\" event was on June 14th, and \"Rack Fest\" was on June 18th. The difference between these dates is **4 days**. Therefore, you participated in \"Turbocharged Tuesdays\" **4 days before** \"Rack Fest.\"",
+    "expected_answer": "4 days.",
+    "memory_swaps": 29,
+    "thinking_tokens": 409,
+    "response_tokens": 65,
+    "hit_max_tokens": false,
+    "retrieval_metrics": {
+      "memory_recall": 0.75,
+      "memory_precision": 1.0,
+      "memory_hits": 12,
+      "memory_relevant": 16,
+      "session_recall": 1.0,
+      "session_hits": 2,
+      "session_relevant": 2
+    }
+  }
+]
