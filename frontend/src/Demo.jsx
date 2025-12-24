@@ -11,7 +11,13 @@ import {
 import { Link } from 'react-router-dom';
 
 const API_URL =
-  "https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run";
+  import.meta.env.VITE_API_URL ||
+  "https://bryanhoulton--streaming-memory-familyassistant-serve.modal.run";
+
+// Debug: Log the API URL being used
+console.log('🔗 API URL:', API_URL);
+console.log('🔧 VITE_API_URL env var:', import.meta.env.VITE_API_URL);
+console.log('🌍 All env vars:', import.meta.env);
 
 const DEMO_CONFIG = {
   name: "Family Assistant",
@@ -29,7 +35,18 @@ const DEMO_CONFIG = {
 export default function Demo() {
   // Warm up the API on page load
   useEffect(() => {
-    fetch(`${API_URL}/health`).catch(() => {});
+    fetch(`${API_URL}/health`)
+      .then((res) => {
+        if (!res.ok) {
+          console.error(`Health check failed: ${res.status} ${res.statusText}`);
+        } else {
+          console.log("API is healthy and ready");
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to connect to API:", err.message);
+        console.error("API URL:", API_URL);
+      });
   }, []);
 
   const [messages, setMessages] = useState([]);
@@ -301,10 +318,18 @@ export default function Demo() {
         }
       }
     } catch (e) {
+      console.error("Chat stream error:", e);
+      console.error("API URL:", API_URL);
+      
+      let errorMessage = e.message;
+      if (e.message.includes("fetch")) {
+        errorMessage = `Failed to connect to API. Please check:\n1. Modal service is deployed and running\n2. API URL is correct: ${API_URL}\n3. No network/firewall blocking the connection\n\nError: ${e.message}`;
+      }
+      
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId
-            ? { ...m, content: `Error: ${e.message}`, streaming: false }
+            ? { ...m, content: errorMessage, streaming: false, error: true }
             : m
         )
       );

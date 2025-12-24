@@ -71,15 +71,19 @@ score = emb_sim * multiplier
 
 ```
 streaming-memory/
-├── streaming_memory/        # Core memory system
+├── streaming_memory/        # Core library
 │   ├── memory.py           # MemoryPool, Memory, Connection classes
+│   ├── config.py           # Configuration dataclasses
+│   ├── service.py          # StreamingMemoryService (platform-agnostic)
+│   ├── api.py              # FastAPI app factory
 │   └── sample_data.py      # Sample memories for testing
+├── deployments/            # Platform-specific deployments
+│   ├── modal_base.py       # Shared Modal infrastructure
+│   └── family_assistant.py # Family assistant on Modal
 ├── examples/
-│   ├── modal_chat.py       # Modal deployment with Qwen3-8B
-│   ├── memories.json       # Pre-parsed tutor memories
-│   └── chat_openai.py      # OpenAI-based chat example
+│   └── dad_memories.json   # Family assistant memories
 ├── frontend/               # React + Vite + Tailwind
-│   └── src/App.jsx        # Main chat UI
+│   └── src/Demo.jsx        # Main chat UI
 └── pyproject.toml
 ```
 
@@ -92,7 +96,7 @@ streaming-memory/
 - [Modal](https://modal.com) account for GPU inference
 - OpenAI API key (for embeddings)
 
-### Local Development
+### Installation
 
 ```bash
 # Clone
@@ -101,16 +105,9 @@ cd streaming-memory
 
 # Install Python deps
 uv sync
-
-# Set up environment
-cp .env.example .env
-# Add your OPENAI_API_KEY
-
-# Run OpenAI example
-uv run python examples/chat_openai.py
 ```
 
-### Deploy to Modal
+### Deploy Backend to Modal
 
 ```bash
 # Install Modal CLI
@@ -122,8 +119,8 @@ modal setup
 # Create secret with OpenAI key
 modal secret create openai-secret OPENAI_API_KEY=sk-...
 
-# Deploy
-uv run modal deploy examples/modal_chat.py
+# Deploy family assistant
+modal deploy deployments/family_assistant.py
 ```
 
 ### Frontend Development
@@ -131,10 +128,12 @@ uv run modal deploy examples/modal_chat.py
 ```bash
 cd frontend
 yarn install
+
+# Create .env.local with your Modal API URL
+echo "VITE_API_URL=https://YOUR_USERNAME--streaming-memory-familyassistant-serve.modal.run" > .env.local
+
 yarn dev
 ```
-
-Update `API_URL` in `src/App.jsx` to point to your Modal endpoint.
 
 ### Deploy Frontend to Vercel
 
@@ -142,6 +141,48 @@ Update `API_URL` in `src/App.jsx` to point to your Modal endpoint.
 cd frontend
 npx vercel --prod
 ```
+
+**Important:** In Vercel, set the environment variable:
+- Go to your Vercel project settings
+- Navigate to "Environment Variables"
+- Add: `VITE_API_URL` = `https://YOUR_USERNAME--streaming-memory-familyassistant-serve.modal.run`
+- Redeploy
+
+## Troubleshooting
+
+### "Failed to fetch" error in production
+
+If you see "Failed to fetch" in production:
+
+1. **Check Modal deployment is running:**
+   ```bash
+   modal app list
+   modal app logs streaming-memory
+   ```
+
+2. **Verify API URL is correct:**
+   - The URL should match your Modal deployment
+   - Check Vercel environment variables are set correctly
+
+3. **Test the API directly:**
+   ```bash
+   curl https://YOUR_USERNAME--streaming-memory-familyassistant-serve.modal.run/health
+   ```
+
+4. **Check browser console:**
+   - Open Developer Tools → Console
+   - Look for detailed error messages about the connection
+
+5. **Modal cold start:**
+   - First request after inactivity takes ~10-30 seconds
+   - The health check on page load should wake it up
+   - If it times out, try again after a moment
+
+### CORS issues
+
+CORS is configured to allow all origins in `streaming_memory/api.py`. If you still see CORS errors:
+- Verify your Modal deployment is using the latest code
+- Redeploy with: `modal deploy deployments/family_assistant.py`
 
 ## Configuration
 

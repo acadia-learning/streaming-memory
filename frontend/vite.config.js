@@ -1,12 +1,22 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/chat': 'https://bryanhoulton--streaming-memory-tutorservice-serve.modal.run'
-    }
-  }
-})
-
+      // Proxy for local development only (not used in production)
+      "/health": {
+        target:
+          "https://bryanhoulton--streaming-memory-familyassistant-serve.modal.run",
+        changeOrigin: true,
+      },
+      "/chat": {
+        target:
+          "https://bryanhoulton--streaming-memory-familyassistant-serve.modal.run",
+        changeOrigin: true,
+      },
+    },
+  },
+});
