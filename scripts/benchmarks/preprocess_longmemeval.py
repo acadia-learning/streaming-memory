@@ -30,6 +30,7 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from streaming_memory.longmemeval import SessionMemories, SUMMARIZER_SYSTEM_PROMPT, format_session_for_summarization
+from streaming_memory.embeddings import create_embedder
 
 
 DATASET_URLS = {

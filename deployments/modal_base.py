@@ -9,6 +9,9 @@ from typing import Callable
 
 import modal
 
+# Default embedding model
+DEFAULT_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+
 
 def get_package_path() -> Path:
     """Get the path to the streaming_memory package."""
@@ -17,13 +20,15 @@ def get_package_path() -> Path:
 
 def create_model_image(
     model_id: str,
+    embedding_model_id: str = DEFAULT_EMBEDDING_MODEL,
     memory_files: list[tuple[Path, str]] | None = None,
 ) -> modal.Image:
     """
-    Create a Modal image with the LLM and dependencies.
+    Create a Modal image with the LLM, embedding model, and dependencies.
     
     Args:
-        model_id: HuggingFace model ID
+        model_id: HuggingFace model ID for LLM
+        embedding_model_id: HuggingFace model ID for embeddings (default: BGE-small)
         memory_files: List of (local_path, container_path) tuples for memory files
     
     Returns:
@@ -34,10 +39,16 @@ def create_model_image(
         snapshot_download(model_id, ignore_patterns=["*.gguf"])
         print(f"Downloaded {model_id}")
     
+    def download_embedding_model():
+        from huggingface_hub import snapshot_download
+        snapshot_download(embedding_model_id)
+        print(f"Downloaded {embedding_model_id}")
+    
     image = (
         modal.Image.debian_slim(python_version="3.11")
         .pip_install(
             "torch",
+            "sentence-transformers>=2.2.0",
             "transformers>=4.40",
             "accelerate>=0.28",
             "numpy",
@@ -46,8 +57,10 @@ def create_model_image(
             "fastapi",
             "uvicorn",
             "pydantic",
+            "sentencepiece>=0.1.99",
         )
         .run_function(download_model)
+        .run_function(download_embedding_model)
         .add_local_dir(get_package_path(), "/root/streaming_memory")
     )
     
@@ -64,9 +77,11 @@ class ModalServiceBase:
     Base class for Modal streaming memory services.
     
     Subclass this and implement setup() to configure your specific assistant.
+    Uses local BGE embeddings for fast, free embedding operations.
     """
     
     model_id: str = "Qwen/Qwen3-8B"
+    embedding_model_id: str = DEFAULT_EMBEDDING_MODEL
     
     def load_model(self):
         """Load the LLM and tokenizer."""
@@ -84,28 +99,26 @@ class ModalServiceBase:
             trust_remote_code=True,
         )
         self.model.eval()
-        print(f"✅ Model loaded! Device: {next(self.model.parameters()).device}")
+        print(f"✅ LLM loaded! Device: {next(self.model.parameters()).device}")
     
-    def create_embed_fn(self, openai_client):
-        """Create an embedding function with caching."""
-        self.embed_cache = {}
+    def load_embedder(self, device: str = "cuda"):
+        """Load local embedding model (BGE-small by default)."""
+        import sys
+        sys.path.insert(0, "/root")
+        from streaming_memory.embeddings import create_embedder
         
-        def embed(text: str):
-            if text in self.embed_cache:
-                return self.embed_cache[text]
-            response = openai_client.embeddings.create(
-                model="text-embedding-3-small",
-                input=text[:8000],
-            )
-            result = response.data[0].embedding
-            self.embed_cache[text] = result
-            return result
-        
-        return embed
+        print(f"🔧 Loading embedding model {self.embedding_model_id}...")
+        self.embedder = create_embedder(
+            model_name=self.embedding_model_id,
+            device=device,
+            cache_embeddings=True,
+        )
+        print(f"✅ Embedding model loaded!")
+        return self.embedder
     
-    def load_memories(self, memory_file: str, embed_fn, openai_client, pool) -> int:
+    def load_memories(self, memory_file: str, pool) -> int:
         """
-        Load memories into the pool with batch embedding.
+        Load memories into the pool with batch embedding using local model.
         
         Returns the total token count of all memories.
         """
@@ -117,17 +130,11 @@ class ModalServiceBase:
         with open(memory_file) as f:
             memories = json.load(f)
         
-        # Batch embed all memories
+        # Batch embed all memories using local model
         memory_contents = [m["content"] for m in memories]
-        batch_size = 50
-        for i in range(0, len(memory_contents), batch_size):
-            batch = memory_contents[i:i + batch_size]
-            response = openai_client.embeddings.create(
-                model="text-embedding-3-small",
-                input=batch,
-            )
-            for j, emb_data in enumerate(response.data):
-                self.embed_cache[batch[j]] = emb_data.embedding
+        print(f"  Batch embedding {len(memory_contents)} memories...")
+        self.embedder.embed_batch(memory_contents)
+        print(f"  ✅ Embedded (cache size: {self.embedder.get_cache_size()})")
         
         # Add memories to pool
         for mem in memories:

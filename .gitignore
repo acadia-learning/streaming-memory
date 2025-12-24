@@ -47,6 +47,11 @@ Thumbs.db
 # Project specific
 results/
 
+# Benchmark results (keep memory_cache files)
+data/results*.json
+data/results*.jsonl
+data/*.eval-results-*
+
 # Frontend
 frontend/node_modules/
 frontend/.vercel/

@@ -12,10 +12,10 @@ import argparse
 from typing import Optional
 
 import numpy as np
-from openai import OpenAI
 from tqdm import tqdm
 
 from streaming_memory.memory import MemoryPool
+from streaming_memory.embeddings import create_embedder
 
 
 def parse_date(date_str: str) -> datetime:
@@ -32,19 +32,18 @@ class RetrievalEvaluator:
     
     def __init__(
         self,
-        openai_api_key: str,
-        embedding_model: str = "text-embedding-3-small",
+        embedding_model: str = "Alibaba-NLP/gte-Qwen2-1.5B-instruct",
+        device: Optional[str] = None,
     ):
-        self.client = OpenAI(api_key=openai_api_key)
-        self.embedding_model = embedding_model
+        self.embedder = create_embedder(
+            model_name=embedding_model,
+            device=device,
+            cache_embeddings=True,
+        )
     
     def embed(self, text: str) -> np.ndarray:
-        """Get embedding for text using OpenAI."""
-        response = self.client.embeddings.create(
-            input=text,
-            model=self.embedding_model
-        )
-        return np.array(response.data[0].embedding)
+        """Get embedding for text using local model."""
+        return self.embedder.embed(text)
     
     def build_memory_pool(
         self, 
@@ -309,8 +308,14 @@ def main():
     parser.add_argument(
         "--embedding-model",
         type=str,
-        default="text-embedding-3-small",
-        help="OpenAI embedding model"
+        default="Alibaba-NLP/gte-Qwen2-1.5B-instruct",
+        help="Local embedding model name (qwen3-embedding-8b)"
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Device to run embeddings on (cuda/mps/cpu, auto if None)"
     )
     
     # Memory pool hyperparameters
@@ -324,15 +329,10 @@ def main():
     
     args = parser.parse_args()
     
-    # Get API key
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY environment variable not set")
-    
-    # Create evaluator
+    # Create evaluator with local embedder
     evaluator = RetrievalEvaluator(
-        openai_api_key=api_key,
         embedding_model=args.embedding_model,
+        device=args.device,
     )
     
     # Run evaluation

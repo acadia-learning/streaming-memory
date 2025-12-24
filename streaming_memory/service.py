@@ -333,8 +333,7 @@ class StreamingMemoryService:
 def load_memories_to_pool(
     pool: MemoryPool,
     memory_file: str,
-    embed_fn: Any,
-    openai_client: Any,
+    embedder: Any = None,
 ) -> int:
     """
     Load memories from a JSON file into a MemoryPool.
@@ -342,8 +341,7 @@ def load_memories_to_pool(
     Args:
         pool: The MemoryPool to populate
         memory_file: Path to JSON file with memories
-        embed_fn: Embedding function (for caching)
-        openai_client: OpenAI client for batch embedding
+        embedder: Optional embedder instance with embed_batch method (uses pool's embed_fn if None)
     
     Returns:
         Total token count of all memories
@@ -351,23 +349,18 @@ def load_memories_to_pool(
     with open(memory_file) as f:
         memories = json.load(f)
     
-    # Batch embed all memories
-    memory_contents = [m["content"] for m in memories]
-    batch_size = 50
-    
-    embed_cache = {}
-    for i in range(0, len(memory_contents), batch_size):
-        batch = memory_contents[i:i + batch_size]
-        response = openai_client.embeddings.create(
-            model="text-embedding-3-small",
-            input=batch,
-        )
-        for j, emb_data in enumerate(response.data):
-            embed_cache[batch[j]] = emb_data.embedding
-    
-    # Update the embed function's cache if it has one
-    if hasattr(embed_fn, '__self__') and hasattr(embed_fn.__self__, 'embed_cache'):
-        embed_fn.__self__.embed_cache.update(embed_cache)
+    # Batch embed all memories if embedder supports it
+    if embedder and hasattr(embedder, 'embed_batch'):
+        print(f"Batch embedding {len(memories)} memories...")
+        memory_contents = [m["content"] for m in memories]
+        embeddings = embedder.embed_batch(memory_contents)
+        
+        # Update the embedder's cache if it has one
+        if hasattr(embedder, 'embed_cache'):
+            for content, embedding in zip(memory_contents, embeddings):
+                embedder.embed_cache[content] = embedding
+        
+        print(f"✓ Embedded {len(memories)} memories (cache size: {embedder.get_cache_size() if hasattr(embedder, 'get_cache_size') else 'N/A'})")
     
     # Add memories to pool
     for mem in memories:

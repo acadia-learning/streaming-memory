@@ -14,6 +14,7 @@ import modal
 
 # Configuration
 MODEL_ID = "Qwen/Qwen3-8B"
+EMBEDDING_MODEL_ID = "BAAI/bge-small-en-v1.5"
 APP_NAME = "streaming-memory"
 
 # Paths
@@ -29,6 +30,13 @@ def download_model():
     print(f"Downloaded {MODEL_ID}")
 
 
+def download_embedding_model():
+    """Download embedding model during image build."""
+    from huggingface_hub import snapshot_download
+    snapshot_download(EMBEDDING_MODEL_ID)
+    print(f"Downloaded {EMBEDDING_MODEL_ID}")
+
+
 # Create Modal app and image
 app = modal.App(APP_NAME)
 
@@ -36,6 +44,7 @@ image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
         "torch",
+        "sentence-transformers>=2.2.0",
         "transformers>=4.40",
         "accelerate>=0.28",
         "numpy",
@@ -44,8 +53,10 @@ image = (
         "fastapi",
         "uvicorn",
         "pydantic",
+        "sentencepiece>=0.1.99",
     )
     .run_function(download_model)
+    .run_function(download_embedding_model)
     .add_local_file(dad_memories_path, "/app/dad_memories.json")
     .add_local_dir(package_path, "/root/streaming_memory")
 )
@@ -56,10 +67,9 @@ image = (
     gpu="A100",
     timeout=600,
     scaledown_window=300,
-    secrets=[modal.Secret.from_name("openai-secret")],
 )
 class FamilyAssistant:
-    """Family Assistant with streaming memory."""
+    """Family Assistant with streaming memory using local embeddings."""
     
     @modal.enter()
     def startup(self):
@@ -67,15 +77,15 @@ class FamilyAssistant:
         import json
         
         import torch
-        from openai import OpenAI
         from transformers import AutoModelForCausalLM, AutoTokenizer
         
         sys.path.insert(0, "/root")
         from streaming_memory import MemoryPool
         from streaming_memory.config import FAMILY_ASSISTANT
         from streaming_memory.service import StreamingMemoryService
+        from streaming_memory.embeddings import create_embedder
         
-        # Load model
+        # Load LLM
         print(f"🚀 Loading {MODEL_ID}...")
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -85,47 +95,35 @@ class FamilyAssistant:
             trust_remote_code=True,
         )
         self.model.eval()
-        print(f"✅ Model loaded! Device: {next(self.model.parameters()).device}")
+        print(f"✅ LLM loaded! Device: {next(self.model.parameters()).device}")
         
-        # Setup embedding with cache
-        self.openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        self.embed_cache = {}
+        # Setup local embedding model (BGE-small)
+        print(f"🔧 Loading embedding model {EMBEDDING_MODEL_ID}...")
+        self.embedder = create_embedder(
+            model_name=EMBEDDING_MODEL_ID,
+            device="cuda",
+            cache_embeddings=True,
+        )
+        print(f"✅ Embedding model loaded!")
         
-        def embed(text: str):
-            if text in self.embed_cache:
-                return self.embed_cache[text]
-            response = self.openai_client.embeddings.create(
-                model="text-embedding-3-small",
-                input=text[:8000],
-            )
-            result = response.data[0].embedding
-            self.embed_cache[text] = result
-            return result
-        
-        # Create memory pool
+        # Create memory pool with local embedder
         print("📚 Loading memories...")
         self.pool = MemoryPool(
-            embed_fn=embed,
+            embed_fn=self.embedder,
             softmax_temperature=FAMILY_ASSISTANT.memory.softmax_temperature,
             diversity_weight=FAMILY_ASSISTANT.memory.diversity_weight,
             association_weight=FAMILY_ASSISTANT.memory.association_weight,
         )
         
-        # Load and embed memories
+        # Load memories
         with open("/app/dad_memories.json") as f:
             memories = json.load(f)
         
-        # Batch embed all memories
+        # Batch embed all memories using local model
         memory_contents = [m["content"] for m in memories]
-        batch_size = 50
-        for i in range(0, len(memory_contents), batch_size):
-            batch = memory_contents[i:i + batch_size]
-            response = self.openai_client.embeddings.create(
-                model="text-embedding-3-small",
-                input=batch,
-            )
-            for j, emb_data in enumerate(response.data):
-                self.embed_cache[batch[j]] = emb_data.embedding
+        print(f"  Batch embedding {len(memory_contents)} memories...")
+        self.embedder.embed_batch(memory_contents)
+        print(f"  ✅ Embedded (cache size: {self.embedder.get_cache_size()})")
         
         # Add memories to pool
         for mem in memories:
@@ -157,7 +155,7 @@ class FamilyAssistant:
         )
         
         self.config = FAMILY_ASSISTANT
-        print("🟢 Container ready - responses will be fast!")
+        print("🟢 Container ready - using local BGE embeddings!")
     
     @modal.asgi_app()
     def serve(self):

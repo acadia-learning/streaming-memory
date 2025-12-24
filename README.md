@@ -76,12 +76,19 @@ streaming-memory/
 │   ├── config.py           # Configuration dataclasses
 │   ├── service.py          # StreamingMemoryService (platform-agnostic)
 │   ├── api.py              # FastAPI app factory
+│   ├── longmemeval.py      # LongMemEval benchmark integration
 │   └── sample_data.py      # Sample memories for testing
+├── scripts/                # Executable scripts
+│   ├── benchmarks/         # LongMemEval evaluation scripts
+│   └── experiments/        # Experimental scripts
 ├── deployments/            # Platform-specific deployments
 │   ├── modal_base.py       # Shared Modal infrastructure
 │   └── family_assistant.py # Family assistant on Modal
 ├── examples/
 │   └── dad_memories.json   # Family assistant memories
+├── data/                   # Benchmark data and caches
+│   ├── longmemeval_oracle.json
+│   └── memory_cache*.json  # Embedding caches
 ├── frontend/               # React + Vite + Tailwind
 │   └── src/Demo.jsx        # Main chat UI
 └── pyproject.toml

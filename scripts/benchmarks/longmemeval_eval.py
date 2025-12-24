@@ -43,8 +43,8 @@ def download_model():
 def download_embedding_model():
     """Download embedding model during image build."""
     from huggingface_hub import snapshot_download
-    snapshot_download("BAAI/bge-small-en-v1.5")
-    print("Downloaded BAAI/bge-small-en-v1.5")
+    snapshot_download("Alibaba-NLP/gte-Qwen2-1.5B-instruct")
+    print("Downloaded Alibaba-NLP/gte-Qwen2-1.5B-instruct (qwen3-embedding-8b)")
 
 
 # Build image with all dependencies
@@ -52,7 +52,6 @@ image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
         "torch",
-        "sentence-transformers>=2.2.0",
         "transformers>=4.40",
         "accelerate>=0.28",
         "numpy",
@@ -101,10 +100,10 @@ class LongMemEvalRunner:
             device_map="auto",
         )
         
-        # Load local embedding model (BGE-small)
+        # Load local embedding model (qwen3-embedding-8b)
         print("🔧 Loading embedding model...")
         self.embedder = create_embedder(
-            model_name="BAAI/bge-small-en-v1.5",
+            model_name="Alibaba-NLP/gte-Qwen2-1.5B-instruct",
             device="cuda",  # Modal GPUs support CUDA
             cache_embeddings=True,
         )
