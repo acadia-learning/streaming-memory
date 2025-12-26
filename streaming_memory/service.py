@@ -189,6 +189,7 @@ class StreamingMemoryService:
             while len(all_tokens) < max_tokens:
                 chunk_size = min(update_every_n, max_tokens - len(all_tokens))
                 
+                t_gen = time.time()
                 outputs = self.model.generate(
                     current_ids,
                     max_new_tokens=chunk_size,
@@ -196,6 +197,7 @@ class StreamingMemoryService:
                     temperature=self.config.model.temperature,
                     pad_token_id=self.tokenizer.eos_token_id,
                 )
+                gen_ms = int((time.time() - t_gen) * 1000)
                 
                 new_token_ids = outputs[0, current_ids.shape[1]:].tolist()
                 
@@ -254,6 +256,7 @@ class StreamingMemoryService:
                     'streaming': base_context_size + current_memory_tokens,
                     'rag': base_context_size + rag_memory_tokens,
                     'all': base_context_size + self.pool_total_tokens,
+                    'gen_ms': gen_ms,
                 })
                 
                 # Re-retrieve memories based on recent generation
@@ -261,7 +264,9 @@ class StreamingMemoryService:
                     all_tokens[-lookback_tokens:], skip_special_tokens=True
                 )
                 
+                t_retrieve = time.time()
                 new_memories = self.pool.retrieve(lookback_text, max_memories=max_memories)
+                retrieve_ms = int((time.time() - t_retrieve) * 1000)
                 new_mem_contents = [m.content for m in new_memories]
                 
                 if set(new_mem_contents) != set(current_mem_contents):
@@ -314,6 +319,7 @@ class StreamingMemoryService:
                         'all_memories_tokens': self.pool_total_tokens,
                         'unique_memories': len(all_unique_memories),
                         'token_history': token_history,
+                        'retrieve_ms': retrieve_ms,
                     })
                 else:
                     current_ids = outputs
