@@ -112,9 +112,9 @@ NEURONS = {
 )
 def test_true_adversarial():
     """Can neurons HIJACK prompts meant for other concepts?"""
+
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import os
 
     print("=" * 70)
     print("TRUE ADVERSARIAL TEST")
@@ -148,7 +148,6 @@ def test_true_adversarial():
 
         best_clamp = None
         best_hijack_count = 0
-        best_results = []
 
         for test_clamp in clamp_values_to_test:
             print(f"\n--- Testing clamp value: {test_clamp} ---")
@@ -233,7 +232,6 @@ def test_true_adversarial():
             if hijack_count > best_hijack_count:
                 best_hijack_count = hijack_count
                 best_clamp = test_clamp
-                best_results = results
 
         # Now do full test with best clamp value
         print(f"\n{'='*70}")
@@ -346,7 +344,7 @@ def test_true_adversarial():
             status = "⚠️ PARTIAL - Weak concept neurons"
         else:
             status = "❌ NO - Just category neurons"
-        
+
         print(f"\n{data['name']}: {rate:.0%} hijack rate")
         print(f"  {status}")
 
@@ -355,6 +353,6 @@ def test_true_adversarial():
 
 @app.local_entrypoint()
 def main():
-    results = test_true_adversarial.remote()
+    test_true_adversarial.remote()
     print("\n✅ Test complete!")
 

@@ -19,9 +19,6 @@ Usage:
 """
 
 import json
-import os
-import sys
-from datetime import datetime
 from pathlib import Path
 
 import modal
@@ -81,26 +78,27 @@ image = (
 )
 class LongMemEvalRunner:
     """Modal class for running LongMemEval evaluation."""
-    
+
     @modal.enter()
     def setup(self):
         """Load model and tokenizer once on container startup."""
-        import torch
         import sys
+
+        import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+
         sys.path.insert(0, "/app")
         from streaming_memory.embeddings import create_embedder
-        
+
         print(f"🔧 Loading {MODEL_ID}...")
-        
+
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
         self.model = AutoModelForCausalLM.from_pretrained(
             MODEL_ID,
             torch_dtype=torch.bfloat16,
             device_map="auto",
         )
-        
+
         # Load local embedding model (BGE-small)
         print("🔧 Loading embedding model...")
         self.embedder = create_embedder(
@@ -108,13 +106,13 @@ class LongMemEvalRunner:
             device="cuda",  # Modal GPUs support CUDA
             cache_embeddings=True,
         )
-        
+
         print("✅ Models loaded!")
-    
+
     def embed(self, text: str) -> np.ndarray:
         """Get embedding using local model."""
         return self.embedder.embed(text)
-    
+
     @modal.method()
     def evaluate_instance(
         self,
@@ -126,24 +124,23 @@ class LongMemEvalRunner:
     ) -> dict:
         """
         Evaluate a single LongMemEval instance.
-        
+
         Returns dict with question_id, hypothesis, and metrics.
         """
         import sys
         sys.path.insert(0, "/app")
-        
-        from streaming_memory.memory import MemoryPool
-        from streaming_memory.service import StreamingMemoryService
+
         from streaming_memory.config import AssistantConfig, MemoryConfig, ModelConfig
         from streaming_memory.longmemeval import (
+            compute_retrieval_metrics,
             load_longmemeval_instance,
             run_streaming_eval,
-            compute_retrieval_metrics,
         )
-        
+        from streaming_memory.service import StreamingMemoryService
+
         question_id = instance["question_id"]
         print(f"Processing {question_id}...")
-        
+
         # Load instance into a fresh MemoryPool
         loaded = load_longmemeval_instance(
             instance=instance,
@@ -155,13 +152,13 @@ class LongMemEvalRunner:
                 "association_weight": 0.5,
             },
         )
-        
+
         # Calculate total tokens in pool
         pool_total_tokens = sum(
             len(self.tokenizer.encode(m.content))
             for m in loaded.pool.memories.values()
         )
-        
+
         # Create config for this evaluation
         config = AssistantConfig(
             name="longmemeval",
@@ -181,7 +178,7 @@ Think step by step in <think>...</think> tags before responding.""",
                 max_tokens=2048,  # Increased for complex reasoning with thinking
             ),
         )
-        
+
         # Create service with the loaded pool
         service = StreamingMemoryService(
             config=config,
@@ -190,7 +187,7 @@ Think step by step in <think>...</think> tags before responding.""",
             model=self.model,
             pool_total_tokens=pool_total_tokens,
         )
-        
+
         # Run streaming evaluation
         result = run_streaming_eval(
             service=service,
@@ -199,7 +196,7 @@ Think step by step in <think>...</think> tags before responding.""",
             max_memories=max_memories,
             lookback_tokens=lookback_tokens,
         )
-        
+
         # Extract retrieved memory IDs from timeline
         retrieved_ids = set()
         if result.get("timeline"):
@@ -210,7 +207,7 @@ Think step by step in <think>...</think> tags before responding.""",
                     for mid, mem in loaded.pool.memories.items():
                         if mem.content == mem_content:
                             retrieved_ids.add(mid)
-        
+
         # Compute retrieval metrics (skip for abstention questions)
         retrieval_metrics = None
         if not question_id.endswith("_abs"):
@@ -219,7 +216,7 @@ Think step by step in <think>...</think> tags before responding.""",
                 session_to_memory_ids=loaded.session_to_memory_ids,
                 answer_session_ids=loaded.answer_session_ids,
             )
-        
+
         return {
             "question_id": question_id,
             "question_type": loaded.question_type,
@@ -246,7 +243,7 @@ def main(
 ):
     """
     Run LongMemEval evaluation.
-    
+
     Args:
         memory_cache: Path to preprocessed memory cache JSON
         output: Path to save results JSONL
@@ -257,31 +254,31 @@ def main(
         limit: Optional limit on instances to process
     """
     import urllib.request
-    
+
     print(f"Loading memory cache from {memory_cache}")
     with open(memory_cache) as f:
         cache = json.load(f)
     print(f"Loaded {len(cache)} session memories")
-    
+
     # Download dataset
     dataset_urls = {
         "oracle": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_oracle.json",
         "s": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json",
         "m": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_m_cleaned.json",
     }
-    
+
     print(f"Downloading {dataset} dataset...")
     with urllib.request.urlopen(dataset_urls[dataset]) as response:
         data = json.loads(response.read())
     print(f"Loaded {len(data)} instances")
-    
+
     if limit:
         data = data[:limit]
         print(f"Limited to {limit} instances")
-    
+
     # Run evaluation
     runner = LongMemEvalRunner()
-    
+
     results = []
     for result in runner.evaluate_instance.map(
         data,
@@ -293,7 +290,7 @@ def main(
         },
     ):
         results.append(result)
-        
+
         # Print progress
         print(f"\n{'='*60}")
         print(f"Question ID: {result['question_id']}")
@@ -309,7 +306,7 @@ def main(
         if result['retrieval_metrics']:
             m = result['retrieval_metrics']
             print(f"Retrieval - Session recall: {m['session_recall']:.2f}, Memory recall: {m['memory_recall']:.2f}")
-    
+
     # Save results in JSONL format for LongMemEval evaluation
     print(f"\nSaving results to {output}")
     with open(output, "w") as f:
@@ -319,36 +316,36 @@ def main(
                 "question_id": result["question_id"],
                 "hypothesis": result["hypothesis"],
             }) + "\n")
-    
+
     # Also save full results with metrics
     full_output = output.replace(".jsonl", "_full.json")
     with open(full_output, "w") as f:
         json.dump(results, f, indent=2)
     print(f"Saved full results to {full_output}")
-    
+
     # Print aggregate metrics
     print("\n" + "="*60)
     print("AGGREGATE METRICS")
     print("="*60)
-    
+
     # Memory swap stats
     swaps = [r["memory_swaps"] for r in results]
-    print(f"\nMemory Swaps:")
+    print("\nMemory Swaps:")
     print(f"  Mean: {np.mean(swaps):.2f}")
     print(f"  Min: {np.min(swaps)}, Max: {np.max(swaps)}")
-    
+
     # Retrieval metrics (excluding abstention)
     retrieval_results = [r for r in results if r["retrieval_metrics"]]
     if retrieval_results:
         session_recalls = [r["retrieval_metrics"]["session_recall"] for r in retrieval_results]
         memory_recalls = [r["retrieval_metrics"]["memory_recall"] for r in retrieval_results]
-        
+
         print(f"\nRetrieval (n={len(retrieval_results)}):")
         print(f"  Session Recall: {np.mean(session_recalls):.4f}")
         print(f"  Memory Recall: {np.mean(memory_recalls):.4f}")
-    
+
     print("\nTo evaluate QA correctness, run:")
-    print(f"  cd LongMemEval/src/evaluation")
+    print("  cd LongMemEval/src/evaluation")
     print(f"  python3 evaluate_qa.py gpt-4o {output} ../../data/longmemeval_{dataset}.json")
 
 

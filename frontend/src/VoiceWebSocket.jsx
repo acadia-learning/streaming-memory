@@ -32,8 +32,8 @@ export default function VoiceWebSocket() {
   const [selectedStory] = useState(() => Math.floor(Math.random() * SAMPLE_STORIES.length));
   const chatRef = useRef(null);
 
-  // Server URL - Modal endpoint
-  const serverUrl = 'https://bryanhoulton--websocket-voice-agent-web-app.modal.run';
+  // Server URL - Modal endpoint (class-based deployment)
+  const serverUrl = 'https://bryanhoulton--websocket-voice-agent-voiceagent-web-app.modal.run';
 
   const {
     stage,
@@ -50,7 +50,13 @@ export default function VoiceWebSocket() {
     currentResponse,
     isSpeaking,
     responseLatency,
+    eagerEndOfTurn,
+    modelContext,
+    thinkingStalled,
+    stallInfo,
   } = useWebSocketVoice(serverUrl);
+  
+  const [showContext, setShowContext] = useState(false);
 
   // Auto-scroll chat area
   useEffect(() => {
@@ -108,21 +114,74 @@ export default function VoiceWebSocket() {
           Back
         </Link>
 
-        <button
-          onClick={() => setShowPrompt(!showPrompt)}
-          className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
-        >
-          {showPrompt ? 'Hide' : 'Show'} prompt
-          <svg
-            className={`w-3 h-3 transition-transform ${showPrompt ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {/* Status indicators */}
+        <div className="flex gap-2">
+          <AnimatePresence>
+            {thinkingStalled && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium"
+                title={stallInfo ? JSON.stringify(stallInfo) : ''}
+              >
+                ⚠️ Thinking Stalled
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {eagerEndOfTurn && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium"
+              >
+                🚀 EagerEndOfTurn
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowContext(!showContext)}
+            className={`text-xs px-2 py-1 rounded ${showContext ? 'bg-blue-100 text-blue-700' : 'text-[#999] hover:text-[#666]'} transition-colors`}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+            {showContext ? 'Hide' : 'Show'} context
+          </button>
+          <button
+            onClick={() => setShowPrompt(!showPrompt)}
+            className="text-xs text-[#999] hover:text-[#666] flex items-center gap-1 transition-colors"
+          >
+            {showPrompt ? 'Hide' : 'Show'} prompt
+            <svg
+              className={`w-3 h-3 transition-transform ${showPrompt ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {/* Model context panel */}
+      <AnimatePresence>
+        {showContext && modelContext && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-b border-[#eee] bg-[#1a1a2e] overflow-hidden"
+          >
+            <pre className="p-4 text-xs text-green-400 font-mono overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap">
+              {modelContext}
+            </pre>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Prompt banner */}
       <PromptBanner show={showPrompt} title={story.title} text={story.text} />

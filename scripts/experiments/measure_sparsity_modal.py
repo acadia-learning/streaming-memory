@@ -10,7 +10,7 @@ app = modal.App("qwen3-sparsity-measurement")
 # Models to test - download all at image build time
 MODELS = [
     "Qwen/Qwen3-8B",
-    "Qwen/Qwen3-32B", 
+    "Qwen/Qwen3-32B",
     "Qwen/Qwen3-30B-A3B",  # MoE model - 30B total, 3B active
 ]
 
@@ -51,10 +51,11 @@ def measure_sparsity(
     """
     Measure how sparse the MLP activations are during generation.
     """
+    from collections import defaultdict
+
+    import numpy as np
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import numpy as np
-    from collections import defaultdict
 
     if prompts is None:
         prompts = [
@@ -79,7 +80,7 @@ def measure_sparsity(
 
     # Storage for activations
     activation_stats = defaultdict(list)
-    
+
     # Store intermediate activations from gate
     gate_activations = defaultdict(list)
 
@@ -109,16 +110,16 @@ def measure_sparsity(
                 'std': act.std().item(),
             })
         return hook
-    
+
     def make_gate_hook(layer_name):
         """Hook specifically for gate_proj (before SiLU activation)"""
         def hook(module, input, output):
             # This captures the gate projection output
             act = output.detach().float().cpu()
-            
+
             # Apply SiLU to see post-activation sparsity
             silu_act = torch.nn.functional.silu(act)
-            
+
             total = act.numel()
             gate_activations[layer_name].append({
                 'total': total,
@@ -133,9 +134,9 @@ def measure_sparsity(
             })
         return hook
 
-    # Storage for MoE router statistics  
+    # Storage for MoE router statistics
     router_stats = defaultdict(list)
-    
+
     def make_router_hook(layer_name):
         """Hook for MoE router to see expert selection sparsity"""
         def hook(module, input, output):
@@ -146,7 +147,7 @@ def measure_sparsity(
                 routing = output[0] if len(output) > 0 else None
             else:
                 routing = output
-            
+
             if routing is not None:
                 routing = routing.detach().float().cpu()
                 # For top-k routing, count how many experts are selected
@@ -159,20 +160,20 @@ def measure_sparsity(
 
     # Register hooks
     is_moe = "A3B" in model_name or "MoE" in model_name.upper()
-    
+
     for name, module in model.named_modules():
         # Hook on full MLP (for dense models) or experts (for MoE)
         if 'mlp' in name.lower() and name.endswith('mlp'):
             hook = module.register_forward_hook(make_mlp_hook(name))
             hooks.append(hook)
             print(f"MLP hook on: {name}")
-        
+
         # Hook on gate_proj to see SiLU sparsity
         if 'gate_proj' in name and 'experts' not in name:
             hook = module.register_forward_hook(make_gate_hook(name))
             hooks.append(hook)
             print(f"Gate hook on: {name}")
-        
+
         # For MoE models, hook on router
         if is_moe and ('router' in name.lower() or 'gate' in name.lower() and 'mlp_gate' not in name.lower()):
             if hasattr(module, 'weight'):  # It's a linear layer (router)
@@ -211,7 +212,7 @@ def measure_sparsity(
 
         # Compute aggregate statistics for MLP outputs
         print(f"\n=== MLP Output Sparsity (threshold={sparsity_threshold}) ===")
-        
+
         total_activations = 0
         total_zero = 0
         total_near_zero_01 = 0
@@ -233,8 +234,8 @@ def measure_sparsity(
             print(f"  ACTIVE (|x|>0.01): {total_activations - total_near_zero_01:,} ({100*(total_activations - total_near_zero_01)/total_activations:.2f}%)")
 
         # Compute gate/SiLU statistics
-        print(f"\n=== Gate Activation Sparsity (SiLU) ===")
-        
+        print("\n=== Gate Activation Sparsity (SiLU) ===")
+
         gate_total = 0
         gate_negative = 0
         gate_post_near_zero = 0
@@ -257,7 +258,7 @@ def measure_sparsity(
 
         # For MoE models, report router statistics
         if is_moe and router_stats:
-            print(f"\n=== MoE Router Statistics ===")
+            print("\n=== MoE Router Statistics ===")
             for layer_name, stats_list in list(router_stats.items())[:3]:
                 if stats_list:
                     print(f"  {layer_name}: shape={stats_list[0]['routing_shape']}, num_experts={stats_list[0]['total_experts']}")
@@ -286,7 +287,7 @@ def measure_sparsity(
 
         # Per-layer breakdown for first prompt
         if i == 0:
-            print(f"\n=== Per-Layer Gate Stats (first prompt) ===")
+            print("\n=== Per-Layer Gate Stats (first prompt) ===")
             for layer_name in sorted(gate_activations.keys())[:5]:  # First 5 layers
                 stats_list = gate_activations[layer_name]
                 if not stats_list:
@@ -304,11 +305,11 @@ def measure_sparsity(
     print("\n" + "=" * 70)
     print("SUMMARY ACROSS ALL PROMPTS")
     print("=" * 70)
-    
+
     avg_mlp_active = np.mean([r['mlp_active_pct'] for r in results])
     avg_gate_active = np.mean([r['gate_active_pct'] for r in results])
     avg_gate_negative = np.mean([r['gate_negative_pct'] for r in results])
-    
+
     print(f"Average MLP output active neurons: {avg_mlp_active:.2f}%")
     print(f"Average Gate active neurons (post-SiLU): {avg_gate_active:.2f}%")
     print(f"Average Gate negative (suppressed by SiLU): {avg_gate_negative:.2f}%")
@@ -324,7 +325,7 @@ def main():
         "Qwen/Qwen3-32B",
         "Qwen/Qwen3-30B-A3B",  # MoE
     ]
-    
+
     all_results = {}
     for model in models_to_test:
         print(f"\n\n{'#'*70}")
@@ -332,7 +333,7 @@ def main():
         print(f"{'#'*70}")
         results = measure_sparsity.remote(model_name=model)
         all_results[model] = results
-    
+
     # Final comparison
     print("\n\n" + "="*70)
     print("FINAL COMPARISON ACROSS MODELS")

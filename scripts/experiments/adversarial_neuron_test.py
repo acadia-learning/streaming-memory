@@ -11,8 +11,8 @@ If neurons truly encode "Golden Gate Bridge", they should override even adversar
 Run with: modal run scripts/experiments/adversarial_neuron_test.py
 """
 
+
 import modal
-import json
 
 app = modal.App("adversarial-neuron-test")
 
@@ -45,7 +45,7 @@ NEURONS = {
         "target_keywords": ["einstein", "albert"],
     },
     "eiffel_tower": {
-        "name": "Eiffel Tower", 
+        "name": "Eiffel Tower",
         "neurons": [
             {"layer": "model.layers.29.mlp.gate_proj", "neuron_idx": 11812},
             {"layer": "model.layers.31.mlp.gate_proj", "neuron_idx": 1386},
@@ -143,9 +143,9 @@ TEST_PROMPTS = {
 )
 def test_adversarial():
     """Test if neurons can override context in adversarial prompts."""
+
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import os
 
     print("=" * 70)
     print("ADVERSARIAL NEURON TEST")
@@ -206,7 +206,7 @@ def test_adversarial():
 
         for difficulty, prompt_list in prompts.items():
             print(f"\n--- {difficulty.upper()} PROMPTS ---")
-            
+
             for prompt in prompt_list:
                 inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
@@ -261,7 +261,7 @@ def test_adversarial():
             baseline_success = sum(1 for x in r if x["baseline_has_target"])
             intervention_success = sum(1 for x in r if x["intervention_has_target"])
             forced = sum(1 for x in r if x["success"])  # Intervention worked where baseline didn't
-            
+
             print(f"\n{difficulty.upper()}:")
             print(f"  Baseline mentions {concept_data['name']}: {baseline_success}/{len(r)}")
             print(f"  Intervention mentions {concept_data['name']}: {intervention_success}/{len(r)}")
@@ -276,36 +276,36 @@ def test_adversarial():
 
     for concept_key, results in all_results.items():
         name = NEURONS[concept_key]["name"]
-        
+
         # Count successes across all difficulties
         total_prompts = 0
         total_forced = 0
-        
+
         for difficulty, r in results.items():
             total_prompts += len(r)
             total_forced += sum(1 for x in r if x["success"])
-        
+
         counter_results = results["counter_leading"]
         counter_forced = sum(1 for x in counter_results if x["success"])
-        
+
         print(f"\n{name}:")
         print(f"  Total forced (all prompts): {total_forced}/{total_prompts}")
         print(f"  Counter-leading forced: {counter_forced}/{len(counter_results)}")
-        
+
         if counter_forced >= 2:
-            print(f"  ✅ STRONG: Neurons can override context!")
+            print("  ✅ STRONG: Neurons can override context!")
         elif counter_forced >= 1:
-            print(f"  ⚠️ WEAK: Neurons sometimes override context")
+            print("  ⚠️ WEAK: Neurons sometimes override context")
         else:
-            print(f"  ❌ FAIL: Neurons cannot override context")
+            print("  ❌ FAIL: Neurons cannot override context")
 
     return all_results
 
 
 @app.local_entrypoint()
 def main():
-    results = test_adversarial.remote()
-    
+    test_adversarial.remote()
+
     print("\n" + "=" * 70)
     print("ADVERSARIAL TEST COMPLETE")
     print("=" * 70)

@@ -86,15 +86,15 @@ Keep your thinking going - don't stop until they finish speaking. When they fini
 )
 class VoiceAgent:
     """LiveKit Voice Agent with streaming LLM via vLLM and TTS via ElevenLabs."""
-    
+
     @modal.enter()
     def startup(self):
         """Load the LLM model with vLLM."""
-        from vllm import LLM, SamplingParams
         from transformers import AutoTokenizer
-        
+        from vllm import LLM, SamplingParams
+
         sys.path.insert(0, "/root")
-        
+
         print(f"Loading {MODEL_ID} with vLLM...")
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
         self.llm = LLM(
@@ -110,15 +110,15 @@ class VoiceAgent:
             max_tokens=1024,
             stop=["<|im_end|>", "<|endoftext|>"],
         )
-        print(f"vLLM loaded! Ready for fast inference.")
-    
+        print("vLLM loaded! Ready for fast inference.")
+
     def build_prompt(self, transcript: str, history: list[dict], user_finished: bool = False) -> str:
         """Build prompt with live transcription."""
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        
+
         for h in history[-4:]:
             messages.append(h)
-        
+
         if user_finished:
             user_content = f"""[TRANSCRIPTION - COMPLETE]
 {transcript}
@@ -130,33 +130,33 @@ User finished speaking. Close your thinking with </think> and respond naturally.
 [...]
 
 Keep thinking continuously about what they're saying. What's new? What's interesting? What questions do you have? Keep your thoughts flowing - they're still talking."""
-        
+
         messages.append({"role": "user", "content": user_content})
-        
+
         return self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-    
+
     @modal.method()
     async def run_agent(self, room_name: str):
         """
         Run the voice agent in a LiveKit room.
         """
-        import time
         import json
-        import base64
+        import time
+
         import aiohttp
         import websockets
-        from vllm import SamplingParams
-        from livekit import rtc, api
+        from livekit import api, rtc
         from livekit.plugins import deepgram
-        
+        from vllm import SamplingParams
+
         livekit_url = os.environ["LIVEKIT_URL"]
         api_key = os.environ["LIVEKIT_API_KEY"]
         api_secret = os.environ["LIVEKIT_API_SECRET"]
         deepgram_api_key = os.environ["DEEPGRAM_API_KEY"]
         elevenlabs_api_key = os.environ["ELEVEN_API_KEY"]
-        
+
         # State
         live_transcript = ""
         generated_text = ""
@@ -168,10 +168,10 @@ Keep thinking continuously about what they're saying. What's new? What's interes
         last_speech_time = 0.0
         stop_generation = asyncio.Event()
         generation_task = None
-        
+
         # Create our own HTTP session for DeepGram
         http_session = aiohttp.ClientSession()
-        
+
         # Create room token
         token = api.AccessToken(api_key, api_secret)
         token.with_identity("voice-agent")
@@ -180,16 +180,16 @@ Keep thinking continuously about what they're saying. What's new? What's interes
             room_join=True,
             room=room_name,
         ))
-        
+
         # Connect to room with options for better connectivity
         room = rtc.Room()
-        
+
         # Connection options - enable TURN relay for better NAT traversal
         connect_options = rtc.RoomOptions(
             auto_subscribe=True,
             dynacast=False,  # Disable for simpler connection
         )
-        
+
         # Data channel for sending text and audio back to client
         async def send_to_client(event_type: str, data: dict):
             """Send event to client via data channel."""
@@ -201,10 +201,10 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                 )
             except Exception as e:
                 print(f"Failed to send: {e}")
-        
+
         # Token buffer for smooth output
         token_buffer = asyncio.Queue()
-        
+
         async def token_streamer():
             """Stream tokens from buffer immediately - no delay."""
             while not stop_generation.is_set():
@@ -213,15 +213,15 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                     await send_to_client("token", token_data)
                 except asyncio.TimeoutError:
                     continue
-        
+
         # Start token streamer
-        streamer_task = asyncio.create_task(token_streamer())
-        
+        asyncio.create_task(token_streamer())
+
         # ElevenLabs TTS streaming - sends audio chunks over data channel
         async def stream_tts_to_client(text_queue: asyncio.Queue):
             """Stream text to ElevenLabs and audio back to client via data channel."""
             uri = f"wss://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}/stream-input?model_id=eleven_turbo_v2_5&output_format=pcm_24000"
-            
+
             try:
                 async with websockets.connect(uri) as ws:
                     # Send initial config
@@ -233,7 +233,7 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                         },
                         "xi_api_key": elevenlabs_api_key,
                     }))
-                    
+
                     async def send_text():
                         """Send text chunks to ElevenLabs."""
                         try:
@@ -245,7 +245,7 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                                 await ws.send(json.dumps({"text": text, "try_trigger_generation": True}))
                         except Exception as e:
                             print(f"TTS send error: {e}")
-                    
+
                     async def receive_audio():
                         """Receive audio from ElevenLabs and send to client."""
                         try:
@@ -260,33 +260,33 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                             pass
                         except Exception as e:
                             print(f"TTS receive error: {e}")
-                    
+
                     await asyncio.gather(send_text(), receive_audio())
-                    
+
             except Exception as e:
                 print(f"TTS stream error: {e}")
-        
+
         async def generate_with_transcript():
             """Generate LLM response using vLLM, continuously thinking as transcript updates."""
             nonlocal generated_text, current_transcript_snapshot, in_thinking
-            
+
             tts_queue = None
             tts_task = None
-            
+
             while not stop_generation.is_set():
                 if not live_transcript.strip():
                     await asyncio.sleep(0.1)
                     continue
-                
+
                 # Check if transcript changed
                 transcript_changed = live_transcript != current_transcript_snapshot
-                
+
                 if transcript_changed:
                     await send_to_client("context_injection", {
                         "old": current_transcript_snapshot,
                         "new": live_transcript,
                     })
-                    
+
                     if not in_thinking:
                         in_thinking = True
                         # Stop any ongoing TTS
@@ -295,12 +295,12 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                             tts_task = None
                         await send_to_client("restart_thinking", {"reason": "user_resumed_speaking"})
                         await send_to_client("thinking_start", {"reason": "new_transcript"})
-                    
+
                     current_transcript_snapshot = live_transcript
                     generated_text = ""
-                
+
                 prompt = self.build_prompt(live_transcript, [], user_finished=user_finished_speaking)
-                
+
                 if generated_text:
                     full_prompt = prompt + generated_text
                 else:
@@ -309,12 +309,12 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                         await send_to_client("generation_start", {"transcript": live_transcript})
                     await send_to_client("thinking_start", {})
                     in_thinking = True
-                
+
                 if user_is_speaking or not user_finished_speaking:
                     stop_tokens = ["<|im_end|>", "<|endoftext|>", "</think>"]
                 else:
                     stop_tokens = ["<|im_end|>", "<|endoftext|>"]
-                
+
                 def do_generate():
                     params = SamplingParams(
                         temperature=0.7,
@@ -323,54 +323,54 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                     )
                     outputs = self.llm.generate([full_prompt], params, use_tqdm=False)
                     return outputs[0].outputs[0].text if outputs else ""
-                
+
                 loop = asyncio.get_event_loop()
                 new_text = await loop.run_in_executor(None, do_generate)
-                
+
                 if stop_generation.is_set():
                     break
-                
+
                 generated_text += new_text
-                
+
                 if '</think>' in new_text:
                     parts = new_text.split('</think>')
                     thinking_part = parts[0]
                     response_part = parts[1] if len(parts) > 1 else ""
-                    
+
                     for char in thinking_part:
                         await token_buffer.put({
                             "t": char,
                             "is_thinking": True,
                             "token_count": len(generated_text),
                         })
-                    
+
                     for char in '</think>':
                         await token_buffer.put({
                             "t": char,
                             "is_thinking": True,
                             "token_count": len(generated_text),
                         })
-                    
+
                     in_thinking = False
                     if speech_end_time > 0:
                         latency_ms = int((time.time() - speech_end_time) * 1000)
                         await send_to_client("thinking_end", {"latency_ms": latency_ms})
                     else:
                         await send_to_client("thinking_end", {})
-                    
+
                     # Start TTS via data channel
                     if response_part.strip():
                         tts_queue = asyncio.Queue()
                         tts_task = asyncio.create_task(stream_tts_to_client(tts_queue))
                         await tts_queue.put(response_part)
-                    
+
                     for char in response_part:
                         await token_buffer.put({
                             "t": char,
                             "is_thinking": False,
                             "token_count": len(generated_text),
                         })
-                        
+
                 else:
                     for char in new_text:
                         await token_buffer.put({
@@ -378,66 +378,66 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                             "is_thinking": in_thinking,
                             "token_count": len(generated_text),
                         })
-                    
+
                     if not in_thinking and tts_task and tts_queue and new_text.strip():
                         await tts_queue.put(new_text)
-                
+
                 if ("<|im_end|>" in new_text or "<|endoftext|>" in new_text) and user_finished_speaking:
                     await send_to_client("response_complete", {})
-                    
+
                     if tts_task and tts_queue:
                         await tts_queue.put(None)
                         await tts_task
                         tts_task = None
-                    
+
                     generated_text = ""
                     current_transcript_snapshot = ""
                     in_thinking = True
                     continue
-                
+
                 await asyncio.sleep(0)
-        
+
         # STT setup
         stt = deepgram.STT(
             api_key=deepgram_api_key,
             http_session=http_session,
         )
-        
+
         @room.on("participant_disconnected")
         def on_participant_disconnected(participant: rtc.RemoteParticipant):
             print(f"Participant {participant.identity} disconnected")
             stop_generation.set()
-        
+
         @room.on("disconnected")
         def on_room_disconnected():
             print("Room disconnected")
             stop_generation.set()
-        
+
         @room.on("track_subscribed")
         def on_track_subscribed(track: rtc.Track, publication: rtc.TrackPublication, participant: rtc.RemoteParticipant):
             nonlocal live_transcript, generation_task
-            
+
             if track.kind != rtc.TrackKind.KIND_AUDIO:
                 return
-            
+
             print(f"Subscribed to audio from {participant.identity}")
-            
+
             async def process_audio():
                 nonlocal live_transcript
-                
+
                 audio_stream = rtc.AudioStream(track)
                 stt_stream = stt.stream()
-                
+
                 async def forward_audio():
                     async for event in audio_stream:
                         stt_stream.push_frame(event.frame)
-                
+
                 async def process_transcription():
                     nonlocal live_transcript, user_is_speaking, user_finished_speaking, speech_end_time, last_speech_time
                     import time
-                    
+
                     SILENCE_THRESHOLD = 1.5
-                    
+
                     async for event in stt_stream:
                         if event.type == "interim_transcript":
                             user_is_speaking = True
@@ -454,14 +454,14 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                             live_transcript = (live_transcript + " " + text).strip()
                             user_is_speaking = False
                             last_speech_time = time.time()
-                            
+
                             await send_to_client("transcript", {
                                 "text": text,
                                 "is_final": True,
                                 "full_transcript": live_transcript,
                                 "user_speaking": False,
                             })
-                            
+
                             async def check_if_finished():
                                 nonlocal user_finished_speaking, speech_end_time
                                 await asyncio.sleep(SILENCE_THRESHOLD)
@@ -469,19 +469,19 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                                     user_finished_speaking = True
                                     speech_end_time = time.time()
                                     await send_to_client("status", {"message": "Generating response...", "stage": "ready_to_respond"})
-                            
+
                             asyncio.create_task(check_if_finished())
-                
+
                 await asyncio.gather(forward_audio(), process_transcription())
-            
+
             asyncio.create_task(process_audio())
-            
+
             if generation_task is None:
                 generation_task = asyncio.create_task(generate_with_transcript())
-        
+
         try:
             print(f"Connecting to room: {room_name}")
-            
+
             # Connect with retry logic
             max_retries = 3
             for attempt in range(max_retries):
@@ -501,24 +501,24 @@ Keep thinking continuously about what they're saying. What's new? What's interes
                     if attempt == max_retries - 1:
                         raise
                     await asyncio.sleep(2)
-            
+
             print(f"Connected! Room: {room.name}, Local participant: {room.local_participant.identity}")
-            
+
             # Small delay to ensure connection is stable
             await asyncio.sleep(0.5)
-            
+
             # Send status updates (no audio track publishing - just data channel)
             await send_to_client("status", {"message": "Container started", "stage": "container"})
             await send_to_client("status", {"message": "Connected to room", "stage": "connecting"})
             await send_to_client("status", {"message": "Model ready", "stage": "model"})
             await send_to_client("connected", {"room": room_name})
             await send_to_client("status", {"message": "Ready! Start speaking.", "stage": "ready"})
-            
+
             while not stop_generation.is_set():
                 await asyncio.sleep(1)
-            
+
             print("Shutting down agent - participant disconnected")
-                
+
         except Exception as e:
             print(f"Error: {e}")
             raise
@@ -540,18 +540,18 @@ def join_room(room_name: str = None, participant_name: str = None):
     """
     Create a room token and spawn the agent.
     """
-    from livekit import api
     from fastapi.responses import JSONResponse
-    
+    from livekit import api
+
     if not room_name:
         room_name = f"voice-{int(__import__('time').time())}"
     if not participant_name:
         participant_name = f"user-{__import__('random').randint(1000, 9999)}"
-    
+
     api_key = os.environ["LIVEKIT_API_KEY"]
     api_secret = os.environ["LIVEKIT_API_SECRET"]
     livekit_url = os.environ["LIVEKIT_URL"]
-    
+
     token = api.AccessToken(api_key, api_secret)
     token.with_identity(participant_name)
     token.with_name(participant_name)
@@ -561,10 +561,10 @@ def join_room(room_name: str = None, participant_name: str = None):
         can_publish=True,
         can_subscribe=True,
     ))
-    
+
     agent = VoiceAgent()
     agent.run_agent.spawn(room_name)
-    
+
     return JSONResponse(
         content={
             "token": token.to_jwt(),

@@ -9,8 +9,8 @@ Tests:
 Run with: modal run scripts/experiments/test_neuron_specificity.py
 """
 
+
 import modal
-import json
 
 app = modal.App("neuron-specificity-test")
 
@@ -108,9 +108,10 @@ SPECIFICITY_TEST_PROMPTS = {
 )
 def test_specificity():
     """Test whether discovered neurons are concept-specific or category-general."""
+    import os
+
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import os
 
     print("=" * 70)
     print("TESTING NEURON SPECIFICITY")
@@ -126,7 +127,7 @@ def test_specificity():
         with open(cache_marker, "w") as f:
             f.write("cached")
         model_cache.commit()
-    
+
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
     model = AutoModelForCausalLM.from_pretrained(
         "Qwen/Qwen3-8B",
@@ -177,7 +178,7 @@ def test_specificity():
                 hooks.append(hook)
 
         results = []
-        
+
         for prompt in test_prompts:
             print(f"\n--- Prompt: \"{prompt}\" ---")
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -211,12 +212,12 @@ def test_specificity():
             interv_specific, interv_specific_found = count_keywords(intervention_text, specific_kw)
             interv_general, interv_general_found = count_keywords(intervention_text, general_kw)
 
-            print(f"\nBASELINE:")
+            print("\nBASELINE:")
             print(f"  {baseline_text[:120]}...")
             print(f"  Specific: {baseline_specific} {baseline_specific_found}")
             print(f"  General:  {baseline_general} {baseline_general_found}")
 
-            print(f"\nINTERVENTION:")
+            print("\nINTERVENTION:")
             print(f"  {intervention_text[:120]}...")
             print(f"  Specific: {interv_specific} {interv_specific_found}")
             print(f"  General:  {interv_general} {interv_general_found}")
@@ -256,22 +257,22 @@ def test_specificity():
         print(f"{'='*70}")
         print(f"Specific keywords: {specific_kw}")
         print(f"General keywords: {general_kw}")
-        print(f"\nBaseline:")
+        print("\nBaseline:")
         print(f"  Avg specific matches: {avg_baseline_specific:.1f}")
         print(f"  Avg general matches:  {avg_baseline_general:.1f}")
         print(f"  Specificity ratio:    {avg_baseline_ratio:.2%}")
-        print(f"\nWith neurons clamped:")
+        print("\nWith neurons clamped:")
         print(f"  Avg specific matches: {avg_interv_specific:.1f}")
         print(f"  Avg general matches:  {avg_interv_general:.1f}")
         print(f"  Specificity ratio:    {avg_interv_ratio:.2%}")
-        
+
         if avg_interv_ratio > 0.5:
             verdict = f"✅ SPECIFIC - These are {concept_data['name']} neurons!"
         elif avg_interv_ratio > 0.3:
-            verdict = f"⚠️ MIXED - Partly specific, partly general"
+            verdict = "⚠️ MIXED - Partly specific, partly general"
         else:
             verdict = f"❌ GENERAL - These are category neurons, not {concept_data['name']} specific"
-        
+
         print(f"\nVERDICT: {verdict}")
 
         all_results[concept_key] = {
@@ -289,7 +290,7 @@ def test_specificity():
     print(f"\n\n{'='*70}")
     print("FINAL SPECIFICITY ANALYSIS")
     print(f"{'='*70}")
-    
+
     for key, data in all_results.items():
         ratio = data["intervention_ratio"]
         if ratio > 0.5:
@@ -298,7 +299,7 @@ def test_specificity():
             status = "⚠️ MIXED"
         else:
             status = "❌ GENERAL"
-        
+
         print(f"\n{data['name']}:")
         print(f"  Baseline specificity:     {data['baseline_ratio']:.1%}")
         print(f"  Intervention specificity: {data['intervention_ratio']:.1%}")
@@ -312,11 +313,11 @@ def test_specificity():
 @app.local_entrypoint()
 def main():
     results = test_specificity.remote()
-    
+
     print("\n" + "=" * 70)
     print("SPECIFICITY TEST COMPLETE")
     print("=" * 70)
-    
+
     for key, data in results.items():
         ratio = data["intervention_ratio"]
         print(f"\n{data['name']}: {ratio:.1%} specific")

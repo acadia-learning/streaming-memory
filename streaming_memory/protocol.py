@@ -5,10 +5,10 @@ Clean, typed message protocol for client-server voice streaming.
 All messages are JSON-serializable for easy debugging and logging.
 """
 
-from dataclasses import dataclass, asdict
+import json
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional
-import json
 
 
 class MessageType(Enum):
@@ -17,24 +17,24 @@ class MessageType(Enum):
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     ERROR = "error"
-    
+
     # Transcription
     TRANSCRIPT_INTERIM = "transcript_interim"
     TRANSCRIPT_FINAL = "transcript_final"
-    
+
     # Agent state
     THINKING_START = "thinking_start"
     THINKING_END = "thinking_end"
     RESPONSE_START = "response_start"
     RESPONSE_END = "response_end"
-    
+
     # Streaming content
     THINKING_TEXT = "thinking_text"
     RESPONSE_TEXT = "response_text"
     TTS_START = "tts_start"
     TTS_CHUNK = "tts_chunk"
     TTS_END = "tts_end"
-    
+
     # Status/observability
     STATUS = "status"
     METRICS = "metrics"
@@ -53,7 +53,7 @@ class ServerMessage:
     type: MessageType
     data: dict[str, Any]
     timestamp_ms: Optional[int] = None
-    
+
     def to_json(self) -> str:
         """Serialize to JSON."""
         payload = {
@@ -63,7 +63,7 @@ class ServerMessage:
         if self.timestamp_ms is not None:
             payload["timestamp_ms"] = self.timestamp_ms
         return json.dumps(payload)
-    
+
     @staticmethod
     def from_json(json_str: str) -> "ServerMessage":
         """Deserialize from JSON."""
@@ -80,14 +80,14 @@ class ClientMessage:
     """Base client message."""
     type: ClientMessageType
     data: dict[str, Any]
-    
+
     def to_json(self) -> str:
         """Serialize to JSON."""
         return json.dumps({
             "type": self.type.value,
             "data": self.data,
         })
-    
+
     @staticmethod
     def from_json(json_str: str) -> "ClientMessage":
         """Deserialize from JSON."""

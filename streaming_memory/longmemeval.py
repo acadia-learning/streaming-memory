@@ -15,8 +15,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 
 from .memory import MemoryPool
-from .service import StreamingMemoryService, StreamEvent
-
+from .service import StreamingMemoryService
 
 # ============================================================================
 # Structured Output Models
@@ -41,7 +40,7 @@ class SessionMemories(BaseModel):
 SUMMARIZER_SYSTEM_PROMPT = """You are an AI assistant reviewing a past conversation with a user.
 Extract distinct memories covering:
 - What the user did, said, or experienced
-- What you did, recommended, or explained  
+- What you did, recommended, or explained
 - What you inferred, noticed, or thought about
 
 Write each memory in FIRST PERSON from your perspective as the assistant.
@@ -84,18 +83,18 @@ def summarize_session_to_memories(
 ) -> list[ExtractedMemory]:
     """
     Extract multiple first-person memories from a conversation session.
-    
+
     Args:
         session: List of turns [{"role": "user", "content": ...}, ...]
         session_date: Date string for context (e.g., "2023/04/10 (Mon) 17:50")
         llm_client: OpenAI client
         model: Model to use for extraction
-    
+
     Returns:
         List of ExtractedMemory objects with content and emotional_intensity
     """
     session_text = format_session_for_summarization(session)
-    
+
     user_prompt = f"""Conversation from {session_date}:
 
 {session_text}
@@ -110,7 +109,7 @@ Extract all distinct memories from this conversation."""
         ],
         response_format=SessionMemories,
     )
-    
+
     result = response.choices[0].message.parsed
     return result.memories if result else []
 
@@ -149,34 +148,34 @@ def load_longmemeval_instance(
 ) -> LoadedInstance:
     """
     Load a LongMemEval instance into a MemoryPool using cached summaries.
-    
+
     Args:
         instance: LongMemEval instance dict with haystack_sessions, etc.
         memory_cache: Pre-computed memories: session_id -> [{"content": ..., "emotional_intensity": ...}, ...]
         embed_fn: Embedding function for the MemoryPool
         pool_kwargs: Optional kwargs for MemoryPool (softmax_temperature, etc.)
-    
+
     Returns:
         LoadedInstance with populated MemoryPool and metadata
     """
     pool_kwargs = pool_kwargs or {}
     pool = MemoryPool(embed_fn=embed_fn, **pool_kwargs)
-    
+
     session_ids = instance["haystack_session_ids"]
     session_dates = instance["haystack_dates"]
-    
+
     session_to_memory_ids: dict[str, list[str]] = {}
-    
+
     for sess_idx, (sess_id, date_str) in enumerate(zip(session_ids, session_dates)):
         session_date = parse_longmemeval_date(date_str)
         memory_ids = []
-        
+
         # Get pre-computed memories for this session
         if sess_id in memory_cache:
             memories = memory_cache[sess_id]
             for mem_idx, mem in enumerate(memories):
                 memory_id = f"{sess_id}_mem{mem_idx}"
-                
+
                 # Use event_date if available, otherwise fall back to session date
                 memory_date = session_date
                 event_date_str = mem.get("event_date")
@@ -185,12 +184,12 @@ def load_longmemeval_instance(
                         memory_date = datetime.strptime(event_date_str, "%Y-%m-%d")
                     except ValueError:
                         event_date_str = None  # Invalid date
-                
+
                 # Include date in content if available for temporal reasoning
                 content = mem["content"]
                 if event_date_str:
                     content = f"[{event_date_str}] {content}"
-                
+
                 pool.add(
                     content=content,
                     emotional_intensity=mem["emotional_intensity"],
@@ -202,9 +201,9 @@ def load_longmemeval_instance(
             # Fallback: no cached memory for this session
             # This shouldn't happen if preprocessing was done correctly
             pass
-        
+
         session_to_memory_ids[sess_id] = memory_ids
-    
+
     return LoadedInstance(
         pool=pool,
         session_to_memory_ids=session_to_memory_ids,
@@ -244,32 +243,31 @@ def run_streaming_eval(
 ) -> dict:
     """
     Run streaming generation and collect results.
-    
+
     Args:
         service: Configured StreamingMemoryService
         question: The question to answer
         update_every_n: Re-retrieve memories every N tokens
         max_memories: Maximum memories in context
         lookback_tokens: Tokens to look back for re-retrieval
-    
+
     Returns:
         Dict with hypothesis, memory_swaps, retrieved_ids, etc.
     """
     import time
-    
+
     hypothesis_tokens = []
     thinking_tokens = []
     memory_swaps = 0
-    all_retrieved_ids: set[str] = set()
     current_memories: list[str] = []
     timeline: list[dict] = []
     hit_max_tokens = False
-    
+
     # Timing
     t_start = time.time()
     t_first_token = None
     timing = {"embed_ms": 0, "swap_count": 0}
-    
+
     for event in service.generate_stream(
         message=question,
         history=[],
@@ -281,54 +279,54 @@ def run_streaming_eval(
             # Initial memory retrieval
             current_memories = event.data.get("memories", [])
             # Note: these are content strings, we need to track IDs differently
-            
+
         elif event.type == "memory_update":
             memory_swaps += 1
             current_memories = event.data.get("memories", [])
-            
+
         elif event.type == "token":
             if t_first_token is None:
                 t_first_token = time.time()
             token = event.data.get("t", "")
             hypothesis_tokens.append(token)
-            
+
         elif event.type == "thinking":
             if t_first_token is None:
                 t_first_token = time.time()
             # Capture thinking for debugging
             token = event.data.get("t", "")
             thinking_tokens.append(token)
-            
+
         elif event.type == "timeline":
             timeline = event.data.get("data", [])
-        
+
         elif event.type == "max_tokens":
             hit_max_tokens = True
-        
+
         elif event.type == "timing":
             stage = event.data.get("stage")
             if stage == "embed":
                 timing["embed_ms"] = event.data.get("ms", 0)
-    
+
     hypothesis = "".join(hypothesis_tokens)
     thinking = "".join(thinking_tokens)
-    
+
     t_end = time.time()
     total_tokens = len(thinking_tokens) + len(hypothesis_tokens)
     total_time = t_end - t_start
     time_to_first = (t_first_token - t_start) if t_first_token else 0
-    
+
     timing.update({
         "total_ms": int(total_time * 1000),
         "time_to_first_token_ms": int(time_to_first * 1000),
         "generation_ms": int((t_end - t_first_token) * 1000) if t_first_token else 0,
         "tokens_per_sec": total_tokens / total_time if total_time > 0 else 0,
     })
-    
+
     # Extract memory IDs from timeline
     # The timeline has memories as content strings, we need to match back to IDs
     # This is a limitation - we'll track by content for now
-    
+
     return {
         "hypothesis": hypothesis,
         "thinking": thinking,
@@ -349,12 +347,12 @@ def compute_retrieval_metrics(
 ) -> dict:
     """
     Compute retrieval metrics.
-    
+
     Args:
         retrieved_memory_ids: Set of memory IDs that were retrieved
         session_to_memory_ids: Mapping from session_id to memory_ids
         answer_session_ids: Ground truth session IDs containing the answer
-    
+
     Returns:
         Dict with recall, precision, hits, etc.
     """
@@ -363,22 +361,22 @@ def compute_retrieval_metrics(
     for sess_id in answer_session_ids:
         if sess_id in session_to_memory_ids:
             answer_memory_ids.update(session_to_memory_ids[sess_id])
-    
+
     # Compute metrics
     hits = retrieved_memory_ids & answer_memory_ids
-    
+
     recall = len(hits) / len(answer_memory_ids) if answer_memory_ids else 0.0
     precision = len(hits) / len(retrieved_memory_ids) if retrieved_memory_ids else 0.0
-    
+
     # Session-level metrics
     retrieved_sessions = set()
     for sess_id, mem_ids in session_to_memory_ids.items():
         if any(mid in retrieved_memory_ids for mid in mem_ids):
             retrieved_sessions.add(sess_id)
-    
+
     session_hits = retrieved_sessions & set(answer_session_ids)
     session_recall = len(session_hits) / len(answer_session_ids) if answer_session_ids else 0.0
-    
+
     return {
         "memory_recall": recall,
         "memory_precision": precision,

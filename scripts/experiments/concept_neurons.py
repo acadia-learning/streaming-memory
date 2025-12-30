@@ -10,8 +10,9 @@ Improvements over v2:
 Run with: modal run scripts/experiments/concept_neurons.py
 """
 
-import modal
 import json
+
+import modal
 
 app = modal.App("concept-neuron-finder")
 
@@ -132,7 +133,7 @@ def compute_quality_score(text, keywords):
     Compute score that rewards keyword matches but penalizes repetition.
     """
     text_lower = text.lower()
-    
+
     # Keyword score
     keyword_score = 0
     found_keywords = []
@@ -140,7 +141,7 @@ def compute_quality_score(text, keywords):
         if kw in text_lower:
             keyword_score += weight
             found_keywords.append(kw)
-    
+
     # Repetition penalty: count repeated words/phrases
     words = text_lower.split()
     if len(words) < 5:
@@ -151,18 +152,18 @@ def compute_quality_score(text, keywords):
         for i in range(1, len(words)):
             if words[i] == words[i-1]:
                 repeat_count += 1
-        
+
         # Also check for repeated 2-grams
         bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)]
         from collections import Counter
         bigram_counts = Counter(bigrams)
         max_bigram_repeat = max(bigram_counts.values()) if bigram_counts else 0
-        
+
         # Penalty based on repetition
         repetition_penalty = min(repeat_count * 2 + max(0, max_bigram_repeat - 2) * 3, keyword_score)
-    
+
     final_score = max(0, keyword_score - repetition_penalty)
-    
+
     return final_score, keyword_score, repetition_penalty, found_keywords
 
 
@@ -176,14 +177,15 @@ def find_concept_neurons(concept_key: str = "einstein"):
     """
     Find the minimal set of neurons for a specific concept.
     """
+    import os
+    from collections import defaultdict
+
+    import numpy as np
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import numpy as np
-    from collections import defaultdict
-    import os
 
     concept = CONCEPTS[concept_key]
-    
+
     print("=" * 70)
     print(f"FINDING NEURONS FOR: {concept['name']}")
     print("=" * 70)
@@ -258,13 +260,13 @@ def find_concept_neurons(concept_key: str = "einstein"):
     for layer_name in layer_names:
         concept_acts = np.array(concept_activations[layer_name])
         control_acts = np.array(control_activations[layer_name])
-        
+
         concept_mean = concept_acts.mean(axis=0)
         control_mean = control_acts.mean(axis=0)
         diff = concept_mean - control_mean
         ratio = concept_mean / (control_mean + 1e-6)
         score = diff * np.log1p(ratio)
-        
+
         for idx in range(len(score)):
             if score[idx] > 1.0:
                 neuron_scores.append({
@@ -318,7 +320,7 @@ def find_concept_neurons(concept_key: str = "einstein"):
 
         scores = []
         outputs = []
-        
+
         for prompt in concept["test_prompts"][:num_prompts]:
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
             intervention_active[0] = True
@@ -330,7 +332,7 @@ def find_concept_neurons(concept_key: str = "einstein"):
                     pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
                 )
             text = tokenizer.decode(output[0], skip_special_tokens=True)
-            
+
             final_score, kw_score, rep_penalty, found = compute_quality_score(text, concept["keywords"])
             scores.append(final_score)
             outputs.append({
@@ -356,13 +358,12 @@ def find_concept_neurons(concept_key: str = "einstein"):
 
     best_config = None
     best_score = -1
-    best_outputs = None
     all_results = []
 
     for num_neurons, clamp_value in configs:
         neurons = top_neurons[:num_neurons]
         avg_score, outputs = test_intervention(neurons, clamp_value)
-        
+
         result = {
             'num_neurons': num_neurons,
             'clamp_value': clamp_value,
@@ -370,17 +371,16 @@ def find_concept_neurons(concept_key: str = "einstein"):
             'outputs': outputs,
         }
         all_results.append(result)
-        
+
         # Show sample output
         best_out = max(outputs, key=lambda x: x['final_score'])
         print(f"\n[{num_neurons} neurons, clamp={clamp_value}] avg_score={avg_score:.1f}")
         print(f"  Best: \"{best_out['text'][:80]}...\"")
         print(f"  Keywords: {best_out['found']}, penalty: {best_out['repetition_penalty']:.0f}")
-        
+
         if avg_score > best_score:
             best_score = avg_score
             best_config = (num_neurons, clamp_value)
-            best_outputs = outputs
 
     # === PHASE 3: FINAL RESULTS ===
     print(f"\n{'='*70}")
@@ -430,7 +430,7 @@ def find_concept_neurons(concept_key: str = "einstein"):
     final_demos = []
     for prompt in concept["test_prompts"]:
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-        
+
         # Baseline
         intervention_active[0] = False
         with torch.no_grad():
@@ -438,7 +438,7 @@ def find_concept_neurons(concept_key: str = "einstein"):
                                        pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id)
         baseline_text = tokenizer.decode(baseline[0], skip_special_tokens=True)
         baseline_score, _, _, baseline_kw = compute_quality_score(baseline_text, concept["keywords"])
-        
+
         # Intervention
         intervention_active[0] = True
         with torch.no_grad():
@@ -446,7 +446,7 @@ def find_concept_neurons(concept_key: str = "einstein"):
                                          pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id)
         intervened_text = tokenizer.decode(intervened[0], skip_special_tokens=True)
         intervened_score, _, _, intervened_kw = compute_quality_score(intervened_text, concept["keywords"])
-        
+
         print(f"\n{'─'*60}")
         print(f"PROMPT: {prompt}")
         print(f"{'─'*60}")
@@ -456,7 +456,7 @@ def find_concept_neurons(concept_key: str = "einstein"):
         print(f"\n{concept['name'].upper()} NEURONS (score={intervened_score}):")
         print(f"  {intervened_text}")
         print(f"  Keywords: {intervened_kw}")
-        
+
         final_demos.append({
             'prompt': prompt,
             'baseline': baseline_text,
@@ -503,29 +503,29 @@ def find_concept_neurons(concept_key: str = "einstein"):
 def find_all_concept_neurons():
     """Find neurons for all concepts and compare."""
     results = {}
-    
+
     for concept_key in CONCEPTS.keys():
         print(f"\n\n{'#'*70}")
         print(f"# FINDING NEURONS FOR: {CONCEPTS[concept_key]['name']}")
         print(f"{'#'*70}\n")
-        
+
         result = find_concept_neurons.local(concept_key)
         results[concept_key] = result
-    
+
     # Final comparison
     print(f"\n\n{'='*70}")
     print("FINAL COMPARISON: ALL CONCEPTS")
     print(f"{'='*70}")
-    
+
     for key, result in results.items():
         print(f"\n{result['concept_name']}:")
         print(f"  Neurons: {result['best_num_neurons']}, Clamp: {result['best_clamp_value']}")
         print(f"  Score improvement: {result['avg_baseline']:.1f} → {result['avg_intervention']:.1f}")
-        print(f"  Top neurons:")
+        print("  Top neurons:")
         for i, n in enumerate(result['neurons'][:3]):
             layer_num = n['layer'].split('.')[2]
             print(f"    {i+1}. layer {layer_num}, neuron {n['neuron_idx']}")
-    
+
     return results
 
 
@@ -533,7 +533,7 @@ def find_all_concept_neurons():
 def main(concept: str = "all"):
     """
     Find concept neurons.
-    
+
     Args:
         concept: 'einstein', 'eiffel_tower', 'golden_gate', or 'all'
     """
@@ -541,11 +541,11 @@ def main(concept: str = "all"):
         results = find_all_concept_neurons.remote()
     else:
         results = find_concept_neurons.remote(concept)
-    
+
     print("\n" + "=" * 70)
     print("EXPERIMENT COMPLETE")
     print("=" * 70)
-    
+
     if concept == "all":
         for key, result in results.items():
             print(f"\n{result['concept_name']}:")

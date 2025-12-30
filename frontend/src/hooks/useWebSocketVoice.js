@@ -21,11 +21,17 @@ export function useWebSocketVoice(serverUrl) {
   const [displayedTranscript, setDisplayedTranscript] = useState('');
   const [currentThinking, setCurrentThinking] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [thinkingCommitted, setThinkingCommitted] = useState(false);  // True after EndOfTurn - don't clear
+  const thinkingCommittedRef = useRef(false);  // Ref for callback access
   const [currentResponse, setCurrentResponse] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [responseLatency, setResponseLatency] = useState(null);
   const [userSpeaking, setUserSpeaking] = useState(false);
   const [error, setError] = useState(null);
+  const [eagerEndOfTurn, setEagerEndOfTurn] = useState(false);  // Debug: show when EagerEndOfTurn fires
+  const [modelContext, setModelContext] = useState(null);  // Debug: show model's context
+  const [thinkingStalled, setThinkingStalled] = useState(false);  // Debug: show when model stalls while user speaking
+  const [stallInfo, setStallInfo] = useState(null);  // Info about the stall
 
   // TTS
   const audioQueueRef = useRef([]);
@@ -119,14 +125,11 @@ export function useWebSocketVoice(serverUrl) {
 
       switch (type) {
         case 'connected':
-          console.log('[Voice] Connected:', msg.session);
           setStage('connected');
           break;
         case 'status':
-          console.log('[Voice] Status:', msg.message);
           break;
         case 'transcript':
-          console.log('[Voice] Transcript:', msg.text, 'final=' + msg.is_final);
           if (msg.is_final) {
             setFullTranscript(msg.full_transcript);
             setDisplayedTranscript(msg.full_transcript);
@@ -138,10 +141,15 @@ export function useWebSocketVoice(serverUrl) {
           break;
         case 'thinking_start':
           setIsThinking(true);
-          setCurrentThinking('');
+          // Only clear if thinking isn't committed
+          if (!thinkingCommittedRef.current) {
+            setCurrentThinking('');
+          }
           break;
         case 'thinking_end':
           setIsThinking(false);
+          setThinkingStalled(false);
+          setStallInfo(null);
           if (msg.latency_ms) setResponseLatency(msg.latency_ms);
           break;
         case 'token':
@@ -152,16 +160,50 @@ export function useWebSocketVoice(serverUrl) {
           }
           break;
         case 'restart_thinking':
+          // Ignore restart_thinking if thinking is committed (user finished speaking)
+          if (thinkingCommittedRef.current) {
+            break;
+          }
           setCurrentThinking('');
           setCurrentResponse('');
           setIsThinking(true);
+          setEagerEndOfTurn(false);
+          setThinkingStalled(false);
+          setStallInfo(null);
+          break;
+        case 'EndOfTurn':
+          setEagerEndOfTurn(true);
+          setThinkingCommitted(true);
+          thinkingCommittedRef.current = true;  // Commit thinking - don't clear anymore
+          setTimeout(() => setEagerEndOfTurn(false), 2000);
+          break;
+        case 'context':
+          setModelContext(msg.prompt);
+          break;
+        case 'thinking_stalled':
+          console.warn('[Voice] THINKING STALLED:', msg);
+          setThinkingStalled(true);
+          setStallInfo(msg);
+          break;
+        case 'thinking_unstalled':
+          console.log('[Voice] Thinking unstalled:', msg);
+          setThinkingStalled(false);
+          setStallInfo(null);
           break;
         case 'response_complete':
           setIsSpeaking(false);
+          // Reset for next turn
+          setThinkingCommitted(false);
+          thinkingCommittedRef.current = false;
+          setCurrentThinking('');
+          setCurrentResponse('');
           break;
         case 'tts_start':
           setIsSpeaking(true);
-          audioQueueRef.current = [];
+          // Don't clear queue if already playing - might lose audio
+          if (!isPlayingRef.current) {
+            audioQueueRef.current = [];
+          }
           break;
         case 'tts_audio':
           audioQueueRef.current.push(msg.audio);
@@ -170,7 +212,7 @@ export function useWebSocketVoice(serverUrl) {
         case 'tts_end':
           break;
         default:
-          console.log('[Voice] Unknown message:', type);
+          break;
       }
     } catch (err) {
       console.error('[Voice] Parse error:', err);
@@ -186,12 +228,9 @@ export function useWebSocketVoice(serverUrl) {
 
     try {
       const wsUrl = serverUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
-      console.log('[Voice] Connecting to:', wsUrl);
-
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('[Voice] WebSocket OPEN');
         wsRef.current = ws;
       };
 
@@ -204,7 +243,6 @@ export function useWebSocketVoice(serverUrl) {
       };
 
       ws.onclose = () => {
-        console.log('[Voice] WebSocket CLOSED');
         wsRef.current = null;
         setStage('idle');
         setIsRecording(false);
@@ -227,13 +265,9 @@ export function useWebSocketVoice(serverUrl) {
 
   // Toggle recording
   const toggleRecording = useCallback(async () => {
-    console.log('[Voice] toggleRecording called, isRecording:', isRecording);
-    
     if (!isRecording) {
       // START RECORDING
       try {
-        console.log('[Voice] Requesting microphone...');
-        
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
@@ -242,7 +276,6 @@ export function useWebSocketVoice(serverUrl) {
           },
         });
         streamRef.current = stream;
-        console.log('[Voice] Got microphone stream');
 
         // Create audio context
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -251,12 +284,10 @@ export function useWebSocketVoice(serverUrl) {
         
         // Resume if suspended (required for user gesture)
         if (audioContext.state === 'suspended') {
-          console.log('[Voice] Resuming suspended audio context...');
           await audioContext.resume();
         }
         
         const sampleRate = audioContext.sampleRate;
-        console.log('[Voice] AudioContext state:', audioContext.state, 'sampleRate:', sampleRate);
 
         // Create source from mic
         const source = audioContext.createMediaStreamSource(stream);
@@ -296,11 +327,6 @@ export function useWebSocketVoice(serverUrl) {
             wsRef.current.send(JSON.stringify({ type: 'audio', audio: base64 }));
             chunksSentRef.current++;
             
-            if (chunksSentRef.current === 1) {
-              console.log('[Voice] ✓ FIRST AUDIO CHUNK SENT!');
-            } else if (chunksSentRef.current % 20 === 0) {
-              console.log('[Voice] Audio chunks sent:', chunksSentRef.current);
-            }
           } catch (err) {
             console.error('[Voice] Error sending audio:', err);
           }
@@ -309,14 +335,10 @@ export function useWebSocketVoice(serverUrl) {
         // Connect the audio graph
         source.connect(processor);
         processor.connect(audioContext.destination);
-        
-        console.log('[Voice] Audio graph connected');
 
         // Set recording state AFTER everything is set up
         isRecordingRef.current = true;
         setIsRecording(true);
-        
-        console.log('[Voice] ✓ Recording STARTED');
         
       } catch (err) {
         console.error('[Voice] Recording error:', err);
@@ -324,8 +346,6 @@ export function useWebSocketVoice(serverUrl) {
       }
     } else {
       // STOP RECORDING
-      console.log('[Voice] Stopping recording...');
-      
       isRecordingRef.current = false;
       
       if (processorRef.current) {
@@ -346,7 +366,6 @@ export function useWebSocketVoice(serverUrl) {
       }
 
       setIsRecording(false);
-      console.log('[Voice] ✓ Recording STOPPED. Total chunks sent:', chunksSentRef.current);
     }
   }, [isRecording]);
 
@@ -372,8 +391,13 @@ export function useWebSocketVoice(serverUrl) {
     userSpeaking,
     currentThinking,
     isThinking,
+    thinkingCommitted,
     currentResponse,
     isSpeaking,
     responseLatency,
+    eagerEndOfTurn,
+    modelContext,
+    thinkingStalled,
+    stallInfo,
   };
 }

@@ -2,7 +2,7 @@
 Preprocess Aryan's 5-minute summaries into memories.
 
 This script:
-1. Reads aryan_5min_summaries.json 
+1. Reads aryan_5min_summaries.json
 2. Extracts individual memories from each summary using GPT
 3. Saves as JSON cache compatible with the streaming memory system
 
@@ -64,7 +64,7 @@ async def extract_memories_from_summary(
             hour = summary["hour"]
             minute = summary["minute"]
             summary_text = summary["summary"]
-            
+
             user_prompt = f"""Summary from {date} at {hour}:{minute:02d}:
 
 {summary_text}
@@ -79,10 +79,10 @@ Extract all distinct memories from this summary."""
                 ],
                 response_format=SummaryMemories,
             )
-            
+
             result = response.choices[0].message.parsed
             memories = result.memories if result else []
-            
+
             return summary, [
                 {
                     "content": m.content,
@@ -105,27 +105,27 @@ async def preprocess_summaries_async(
 ) -> list[dict]:
     """
     Extract memories from all summaries using async parallel processing.
-    
+
     Returns:
         List of memory dicts with content, emotional_intensity, created_at
     """
     print(f"Processing {len(summaries)} summaries")
     print(f"Using {max_concurrent} concurrent requests")
-    
+
     semaphore = asyncio.Semaphore(max_concurrent)
-    
+
     # Create tasks
     tasks = [
         extract_memories_from_summary(client, summary, model, semaphore)
         for summary in summaries
     ]
-    
+
     # Process with progress bar
     all_memories = []
     for coro in tqdm_asyncio.as_completed(tasks, desc="Extracting memories"):
         summary, memories = await coro
         all_memories.extend(memories)
-    
+
     return all_memories
 
 
@@ -163,29 +163,29 @@ async def main_async():
         default=None,
         help="Limit number of summaries to process (for testing)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Check API key
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY environment variable not set")
-    
+
     client = AsyncOpenAI(api_key=api_key)
     input_path = Path(args.input)
     output_path = Path(args.output)
-    
+
     # Load summaries
     print(f"Loading summaries from {input_path}")
     with open(input_path) as f:
         summaries = json.load(f)
     print(f"Loaded {len(summaries)} summaries")
-    
+
     # Limit if specified
     if args.limit:
         summaries = summaries[:args.limit]
         print(f"Limited to {len(summaries)} summaries")
-    
+
     # Process summaries
     memories = await preprocess_summaries_async(
         summaries=summaries,
@@ -194,12 +194,12 @@ async def main_async():
         max_concurrent=args.concurrency,
         output_path=output_path,
     )
-    
+
     # Save output
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(memories, f, indent=2)
-    
+
     print(f"\n✅ Saved {len(memories)} memories to {output_path}")
     print(f"Memories per summary: {len(memories) / len(summaries):.2f}")
 

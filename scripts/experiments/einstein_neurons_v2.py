@@ -10,8 +10,9 @@ Strategies to try:
 Run with: modal run scripts/experiments/einstein_neurons_v2.py
 """
 
-import modal
 import json
+
+import modal
 
 app = modal.App("einstein-neurons-v2")
 
@@ -66,11 +67,12 @@ def find_best_einstein_intervention():
     """
     Try multiple intervention strategies and find what makes outputs most Einstein-y.
     """
+    import os
+    from collections import defaultdict
+
+    import numpy as np
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import numpy as np
-    from collections import defaultdict
-    import os
 
     print("=" * 70)
     print("EINSTEIN NEURONS V2: MAXIMUM EINSTEIN-NESS")
@@ -173,13 +175,13 @@ def find_best_einstein_intervention():
     for layer_name in layer_names:
         einstein_acts = np.array(einstein_activations[layer_name])
         control_acts = np.array(control_activations[layer_name])
-        
+
         einstein_mean = einstein_acts.mean(axis=0)
         control_mean = control_acts.mean(axis=0)
         diff = einstein_mean - control_mean
         ratio = einstein_mean / (control_mean + 1e-6)
         score = diff * np.log1p(ratio)
-        
+
         for neuron_idx in range(len(score)):
             if score[neuron_idx] > 1.0:  # Only keep significant ones
                 neuron_scores.append({
@@ -193,7 +195,7 @@ def find_best_einstein_intervention():
     neuron_scores.sort(key=lambda x: x['score'], reverse=True)
     top_neurons = neuron_scores[:30]
 
-    print(f"\nTop 15 Einstein neurons:")
+    print("\nTop 15 Einstein neurons:")
     for i, n in enumerate(top_neurons[:15]):
         print(f"  {i+1}. {n['layer'].split('.')[-3]}.{n['neuron_idx']}: "
               f"score={n['score']:.2f}, einstein={n['einstein_mean']:.2f}, "
@@ -256,9 +258,9 @@ def find_best_einstein_intervention():
 
     for strategy_name, num_neurons, mode, value in strategies:
         print(f"\n--- Strategy: {strategy_name} ---")
-        
+
         neurons_to_use = top_neurons[:num_neurons] if num_neurons > 0 else []
-        
+
         # Group by layer
         neurons_by_layer = {}
         for n in neurons_to_use:
@@ -276,7 +278,7 @@ def find_best_einstein_intervention():
             def hook(module, input, output):
                 if not intervention_active[0]:
                     return output
-                
+
                 modified = output.clone()
                 for neuron_idx, einstein_mean in neuron_data:
                     if current_mode[0] == "multiply":
@@ -304,7 +306,7 @@ def find_best_einstein_intervention():
 
         for prompt in TEST_PROMPTS[:3]:  # Use 3 prompts for speed
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-            
+
             intervention_active[0] = (mode != "none")
             with torch.no_grad():
                 output = model.generate(
@@ -329,7 +331,7 @@ def find_best_einstein_intervention():
 
         avg_score = sum(strategy_scores) / len(strategy_scores)
         print(f"  Average Einstein score: {avg_score:.1f}")
-        
+
         # Show best output for this strategy
         best_output = max(strategy_outputs, key=lambda x: x['score'])
         print(f"  Best output (score={best_output['score']}): {best_output['output'][:100]}...")
@@ -350,7 +352,7 @@ def find_best_einstein_intervention():
     print("=" * 70)
 
     all_results.sort(key=lambda x: x['avg_score'], reverse=True)
-    
+
     print("\nStrategies ranked by Einstein score:")
     for i, r in enumerate(all_results):
         marker = "🏆" if i == 0 else "  "
@@ -362,7 +364,7 @@ def find_best_einstein_intervention():
     print(f"{'='*70}")
     print(f"Mode: {best['mode']}, Value: {best['value']}, Neurons: {best['num_neurons']}")
     print(f"Average Einstein Score: {best['avg_score']:.1f}")
-    
+
     print("\nSample outputs with best strategy:")
     for out in best['outputs']:
         print(f"\nPrompt: {out['prompt']}")
@@ -408,7 +410,7 @@ def find_best_einstein_intervention():
     final_outputs = []
     for prompt in TEST_PROMPTS:
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-        
+
         # Baseline
         intervention_active[0] = False
         with torch.no_grad():
@@ -417,7 +419,7 @@ def find_best_einstein_intervention():
                 pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
             )
         baseline_text = tokenizer.decode(baseline[0], skip_special_tokens=True)
-        
+
         # With intervention
         intervention_active[0] = True
         with torch.no_grad():
@@ -426,16 +428,16 @@ def find_best_einstein_intervention():
                 pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
             )
         einstein_text = tokenizer.decode(einstein[0], skip_special_tokens=True)
-        
+
         baseline_score, _ = count_einstein_score(baseline_text)
         einstein_score, einstein_keywords = count_einstein_score(einstein_text)
-        
+
         print(f"\n{'─'*60}")
         print(f"PROMPT: {prompt}")
         print(f"{'─'*60}")
         print(f"BASELINE (score={baseline_score}):\n  {baseline_text}")
         print(f"\nEINSTEIN (score={einstein_score}, keywords={einstein_keywords}):\n  {einstein_text}")
-        
+
         final_outputs.append({
             'prompt': prompt,
             'baseline': baseline_text,
@@ -451,17 +453,17 @@ def find_best_einstein_intervention():
     print(f"\n{'='*70}")
     print("FINAL SUMMARY")
     print(f"{'='*70}")
-    
+
     avg_baseline = sum(o['baseline_score'] for o in final_outputs) / len(final_outputs)
     avg_einstein = sum(o['einstein_score'] for o in final_outputs) / len(final_outputs)
-    
+
     print(f"Average baseline Einstein score: {avg_baseline:.1f}")
     print(f"Average intervention Einstein score: {avg_einstein:.1f}")
     print(f"Improvement: {avg_einstein - avg_baseline:.1f} ({(avg_einstein/max(avg_baseline,0.1)):.1f}x)")
-    
+
     print(f"\nBest strategy: {best['strategy']}")
     print(f"Neurons used: {best['num_neurons']}")
-    
+
     print("\nThe Einstein neurons:")
     for i, n in enumerate(best_neurons):
         print(f"  {i+1}. {n['layer']}, neuron {n['neuron_idx']}")
@@ -482,7 +484,7 @@ def find_best_einstein_intervention():
 @app.local_entrypoint()
 def main():
     results = find_best_einstein_intervention.remote()
-    
+
     print("\n" + "=" * 70)
     print("EXPERIMENT COMPLETE")
     print("=" * 70)

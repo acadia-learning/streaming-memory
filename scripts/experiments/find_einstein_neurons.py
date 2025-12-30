@@ -2,7 +2,7 @@
 Find the Albert Einstein Neurons in Qwen Models.
 
 This experiment aims to find the smallest set of neurons that, when activated,
-make model outputs "Albert Einstein-y". 
+make model outputs "Albert Einstein-y".
 
 Approach:
 1. DISCOVERY: Run Einstein-related prompts vs control prompts, record activations
@@ -12,10 +12,9 @@ Approach:
 Run with: modal run scripts/experiments/find_einstein_neurons.py
 """
 
-import modal
 import json
-from dataclasses import dataclass
-from typing import Optional
+
+import modal
 
 app = modal.App("einstein-neuron-finder")
 
@@ -109,13 +108,14 @@ def discover_einstein_neurons(
 ):
     """
     Phase 1: Discover neurons that activate differentially for Einstein content.
-    
+
     Returns a ranked list of (layer, neuron_idx, score) tuples.
     """
+    from collections import defaultdict
+
+    import numpy as np
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import numpy as np
-    from collections import defaultdict
 
     print(f"\n{'='*70}")
     print(f"DISCOVERING EINSTEIN NEURONS IN: {model_name}")
@@ -158,22 +158,22 @@ def discover_einstein_neurons(
             hook = module.register_forward_hook(make_gate_hook(name))
             hooks.append(hook)
             layer_names.append(name)
-    
+
     print(f"Registered {len(hooks)} gate hooks")
 
     # Collect Einstein activations
     print(f"\nCollecting activations for {len(EINSTEIN_PROMPTS)} Einstein prompts...")
     current_storage = einstein_activations
-    
+
     for prompt in EINSTEIN_PROMPTS:
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
         with torch.no_grad():
             _ = model(**inputs)
-    
+
     # Collect control activations
     print(f"Collecting activations for {len(CONTROL_PROMPTS)} control prompts...")
     current_storage = control_activations
-    
+
     for prompt in CONTROL_PROMPTS:
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
         with torch.no_grad():
@@ -185,27 +185,27 @@ def discover_einstein_neurons(
 
     # Compute differential activation scores
     print("\nComputing differential activation scores...")
-    
+
     neuron_scores = []  # List of (layer, neuron_idx, score, einstein_mean, control_mean)
-    
+
     for layer_name in layer_names:
         einstein_acts = np.array(einstein_activations[layer_name])  # [num_prompts, num_neurons]
         control_acts = np.array(control_activations[layer_name])
-        
+
         # Mean activation for Einstein vs control
         einstein_mean = einstein_acts.mean(axis=0)
         control_mean = control_acts.mean(axis=0)
-        
+
         # Differential score: how much MORE does this neuron activate for Einstein?
         # Using ratio and difference combined
         diff = einstein_mean - control_mean
         # Avoid division by zero
         ratio = einstein_mean / (control_mean + 1e-6)
-        
+
         # Combined score: high when both absolute difference and ratio are high
         # This finds neurons that are specifically Einstein-activated
         score = diff * np.log1p(ratio)
-        
+
         for neuron_idx in range(len(score)):
             neuron_scores.append({
                 'layer': layer_name,
@@ -216,22 +216,22 @@ def discover_einstein_neurons(
                 'diff': float(diff[neuron_idx]),
                 'ratio': float(ratio[neuron_idx]),
             })
-    
+
     # Sort by score (highest = most Einstein-specific)
     neuron_scores.sort(key=lambda x: x['score'], reverse=True)
-    
+
     # Get top candidates
     top_neurons = neuron_scores[:top_k_neurons]
-    
+
     print(f"\n{'='*70}")
     print(f"TOP {top_k_neurons} EINSTEIN NEURON CANDIDATES")
     print(f"{'='*70}")
-    
+
     for i, neuron in enumerate(top_neurons[:20]):
         print(f"{i+1:3}. {neuron['layer']}, neuron {neuron['neuron_idx']:5d}: "
               f"score={neuron['score']:.4f}, einstein={neuron['einstein_mean']:.4f}, "
               f"control={neuron['control_mean']:.4f}, ratio={neuron['ratio']:.2f}x")
-    
+
     return {
         'model': model_name,
         'top_neurons': top_neurons,
@@ -253,13 +253,13 @@ def test_neuron_intervention(
 ):
     """
     Phase 2: Test if forcing candidate neurons makes outputs Einstein-y.
-    
+
     We hook the gate_proj layers and multiply the activations of specific neurons,
     then check if the model outputs become related to Einstein.
     """
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    
+
     if neurons_to_activate is None:
         print("No neurons specified, skipping intervention test")
         return None
@@ -288,20 +288,20 @@ def test_neuron_intervention(
 
     # Create intervention hooks
     intervention_active = False
-    
+
     def make_intervention_hook(layer_name, neuron_indices):
         """Hook that amplifies specific neuron activations."""
         def hook(module, input, output):
             if not intervention_active:
                 return output
-            
+
             # Amplify the specified neurons
             modified = output.clone()
             for idx in neuron_indices:
                 modified[:, :, idx] = modified[:, :, idx] * activation_multiplier
             return modified
         return hook
-    
+
     # Register intervention hooks
     hooks = []
     for name, module in model.named_modules():
@@ -311,17 +311,17 @@ def test_neuron_intervention(
             )
             hooks.append(hook)
             print(f"Intervention hook on {name}: {len(neurons_by_layer[name])} neurons")
-    
+
     test_prompts = INTERVENTION_TEST_PROMPTS[:num_test_prompts]
     results = []
-    
+
     for prompt in test_prompts:
         print(f"\n{'='*50}")
         print(f"Prompt: {prompt}")
         print(f"{'='*50}")
-        
+
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-        
+
         # Generate WITHOUT intervention (baseline)
         intervention_active = False
         with torch.no_grad():
@@ -333,7 +333,7 @@ def test_neuron_intervention(
             )
         baseline_text = tokenizer.decode(baseline_output[0], skip_special_tokens=True)
         print(f"\n[BASELINE] {baseline_text}")
-        
+
         # Generate WITH intervention (Einstein neurons activated)
         intervention_active = True
         with torch.no_grad():
@@ -345,21 +345,21 @@ def test_neuron_intervention(
             )
         einstein_text = tokenizer.decode(einstein_output[0], skip_special_tokens=True)
         print(f"\n[EINSTEIN NEURONS] {einstein_text}")
-        
+
         # Check for Einstein-related content
         einstein_keywords = [
             'einstein', 'relativity', 'e=mc', 'physics', 'quantum',
             'german', 'princeton', 'nobel', 'photoelectric', 'spacetime',
             'mass', 'energy', 'light', 'speed', 'theory', 'scientist'
         ]
-        
+
         baseline_einstein_score = sum(
             1 for kw in einstein_keywords if kw in baseline_text.lower()
         )
         intervention_einstein_score = sum(
             1 for kw in einstein_keywords if kw in einstein_text.lower()
         )
-        
+
         results.append({
             'prompt': prompt,
             'baseline': baseline_text,
@@ -368,29 +368,29 @@ def test_neuron_intervention(
             'intervention_einstein_score': intervention_einstein_score,
             'score_increase': intervention_einstein_score - baseline_einstein_score,
         })
-        
+
         print(f"\nEinstein score: baseline={baseline_einstein_score}, "
               f"intervention={intervention_einstein_score} "
               f"(+{intervention_einstein_score - baseline_einstein_score})")
-    
+
     # Remove hooks
     for hook in hooks:
         hook.remove()
-    
+
     # Summary
     print(f"\n{'='*70}")
     print("INTERVENTION RESULTS SUMMARY")
     print(f"{'='*70}")
-    
+
     avg_baseline = sum(r['baseline_einstein_score'] for r in results) / len(results)
     avg_intervention = sum(r['intervention_einstein_score'] for r in results) / len(results)
     avg_increase = sum(r['score_increase'] for r in results) / len(results)
-    
+
     print(f"Average baseline Einstein score: {avg_baseline:.2f}")
     print(f"Average intervention Einstein score: {avg_intervention:.2f}")
     print(f"Average score increase: {avg_increase:.2f}")
     print(f"Success rate: {sum(1 for r in results if r['score_increase'] > 0)}/{len(results)}")
-    
+
     return {
         'model': model_name,
         'neurons_activated': len(neurons_to_activate),
@@ -415,16 +415,17 @@ def find_minimal_einstein_set(
 ):
     """
     Full pipeline: Find the smallest set of neurons that produce Einstein-y outputs.
-    
+
     Uses binary search / ablation to narrow down from initial candidates.
     """
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    import numpy as np
     from collections import defaultdict
 
+    import numpy as np
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
     print(f"\n{'#'*70}")
-    print(f"# FINDING MINIMAL EINSTEIN NEURON SET")
+    print("# FINDING MINIMAL EINSTEIN NEURON SET")
     print(f"# Model: {model_name}")
     print(f"# Initial candidates: {initial_candidates}")
     print(f"# Target set size: {target_set_size}")
@@ -464,7 +465,7 @@ def find_minimal_einstein_set(
             hook = module.register_forward_hook(make_gate_hook(name))
             hooks.append(hook)
             layer_names.append(name)
-    
+
     print(f"Registered {len(hooks)} hooks on {len(layer_names)} layers")
 
     # Collect Einstein activations
@@ -473,7 +474,7 @@ def find_minimal_einstein_set(
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
         with torch.no_grad():
             _ = model(**inputs)
-    
+
     # Collect control activations
     current_storage = control_activations
     for prompt in CONTROL_PROMPTS:
@@ -489,13 +490,13 @@ def find_minimal_einstein_set(
     for layer_name in layer_names:
         einstein_acts = np.array(einstein_activations[layer_name])
         control_acts = np.array(control_activations[layer_name])
-        
+
         einstein_mean = einstein_acts.mean(axis=0)
         control_mean = control_acts.mean(axis=0)
         diff = einstein_mean - control_mean
         ratio = einstein_mean / (control_mean + 1e-6)
         score = diff * np.log1p(ratio)
-        
+
         for neuron_idx in range(len(score)):
             neuron_scores.append({
                 'layer': layer_name,
@@ -504,11 +505,11 @@ def find_minimal_einstein_set(
                 'einstein_mean': float(einstein_mean[neuron_idx]),
                 'control_mean': float(control_mean[neuron_idx]),
             })
-    
+
     neuron_scores.sort(key=lambda x: x['score'], reverse=True)
     candidates = neuron_scores[:initial_candidates]
-    
-    print(f"\nTop 10 candidate neurons:")
+
+    print("\nTop 10 candidate neurons:")
     for i, n in enumerate(candidates[:10]):
         print(f"  {i+1}. {n['layer']}, neuron {n['neuron_idx']}: score={n['score']:.4f}")
 
@@ -527,7 +528,7 @@ def find_minimal_einstein_set(
             neurons_by_layer[layer].append(neuron['neuron_idx'])
 
         intervention_active = False
-        
+
         def make_intervention_hook(layer_name, neuron_indices):
             def hook(module, input, output):
                 if not intervention_active:
@@ -537,7 +538,7 @@ def find_minimal_einstein_set(
                     modified[:, :, idx] = modified[:, :, idx] * activation_multiplier
                 return modified
             return hook
-        
+
         hooks = []
         for name, module in model.named_modules():
             if name in neurons_by_layer:
@@ -545,16 +546,16 @@ def find_minimal_einstein_set(
                     make_intervention_hook(name, neurons_by_layer[name])
                 )
                 hooks.append(hook)
-        
+
         einstein_keywords = [
             'einstein', 'relativity', 'e=mc', 'physics', 'quantum',
             'german', 'princeton', 'nobel', 'photoelectric', 'spacetime',
             'mass', 'energy', 'light', 'theory', 'scientist', 'albert'
         ]
-        
+
         total_score = 0
         test_prompts = INTERVENTION_TEST_PROMPTS[:num_prompts]
-        
+
         for prompt in test_prompts:
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
             intervention_active = True
@@ -568,10 +569,10 @@ def find_minimal_einstein_set(
             text = tokenizer.decode(output[0], skip_special_tokens=True).lower()
             score = sum(1 for kw in einstein_keywords if kw in text)
             total_score += score
-        
+
         for hook in hooks:
             hook.remove()
-        
+
         return total_score / num_prompts
 
     # Test full candidate set first
@@ -580,28 +581,28 @@ def find_minimal_einstein_set(
     print(f"Full set Einstein score: {full_score:.2f}")
 
     # Binary search for minimal set
-    print(f"\nSearching for minimal effective set...")
-    
+    print("\nSearching for minimal effective set...")
+
     # Start with top neurons and ablate
     current_set = candidates[:initial_candidates]
     best_set = current_set[:]
     best_score = full_score
-    
+
     # Try progressively smaller sets - aggressive for speed
     test_sizes = [25, 10, 5, 3]
-    
+
     for size in test_sizes:
         if size >= len(current_set):
             continue
-            
+
         test_set = current_set[:size]
         score = test_neuron_set(test_set, num_prompts=2)  # Fewer prompts for speed
         print(f"  Set size {size}: score={score:.2f}")
-        
+
         if score >= best_score * 0.6:  # More lenient threshold for speed
             best_set = test_set[:]
             best_score = score
-            print(f"    -> New best set!")
+            print("    -> New best set!")
 
     # Skip fine-grained ablation for speed - just use best set from binary search
     essential_neurons = best_set[:target_set_size]
@@ -611,15 +612,15 @@ def find_minimal_einstein_set(
     print(f"\n{'='*70}")
     print("FINAL RESULTS: MINIMAL EINSTEIN NEURON SET")
     print(f"{'='*70}")
-    
+
     final_set = essential_neurons if essential_neurons else best_set[:target_set_size]
     final_score = test_neuron_set(final_set, num_prompts=5)
-    
+
     print(f"\nFound {len(final_set)} essential Einstein neurons:")
     for i, neuron in enumerate(final_set):
         print(f"  {i+1}. {neuron['layer']}, neuron {neuron['neuron_idx']}")
         print(f"      score={neuron['score']:.4f}, einstein_mean={neuron['einstein_mean']:.4f}")
-    
+
     print(f"\nFinal set Einstein score: {final_score:.2f}")
     print(f"Set size reduction: {initial_candidates} -> {len(final_set)} ({100*len(final_set)/initial_candidates:.1f}%)")
 
@@ -636,7 +637,7 @@ def find_minimal_einstein_set(
         neurons_by_layer[layer].append(neuron['neuron_idx'])
 
     intervention_active = [False]
-    
+
     def make_final_hook(layer_name, neuron_indices):
         def hook(module, input, output):
             if not intervention_active[0]:
@@ -646,7 +647,7 @@ def find_minimal_einstein_set(
                 modified[:, :, idx] = modified[:, :, idx] * activation_multiplier
             return modified
         return hook
-    
+
     hooks = []
     for name, module in model.named_modules():
         if name in neurons_by_layer:
@@ -662,17 +663,17 @@ def find_minimal_einstein_set(
 
     for prompt in sample_prompts:
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-        
+
         intervention_active[0] = False
         with torch.no_grad():
             baseline = model.generate(**inputs, max_new_tokens=40, do_sample=False,
                                        pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id)
-        
+
         intervention_active[0] = True
         with torch.no_grad():
             einstein = model.generate(**inputs, max_new_tokens=40, do_sample=False,
                                        pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id)
-        
+
         print(f"\nPrompt: {prompt}")
         print(f"Baseline: {tokenizer.decode(baseline[0], skip_special_tokens=True)}")
         print(f"Einstein: {tokenizer.decode(einstein[0], skip_special_tokens=True)}")
@@ -696,7 +697,7 @@ def main(
 ):
     """
     Run the Einstein neuron experiment.
-    
+
     Modes:
         - discover: Just find candidate neurons
         - intervene: Test intervention with given neurons
@@ -705,7 +706,7 @@ def main(
     if mode == "discover":
         results = discover_einstein_neurons.remote(model_name=model)
         print(json.dumps(results, indent=2))
-        
+
     elif mode == "full":
         results = find_minimal_einstein_set.remote(model_name=model)
         print("\n" + "="*70)
@@ -717,7 +718,7 @@ def main(
             'final_score': results['final_score'],
             'minimal_set': results['minimal_set'],
         }, indent=2))
-    
+
     else:
         print(f"Unknown mode: {mode}")
         print("Available modes: discover, intervene, full")

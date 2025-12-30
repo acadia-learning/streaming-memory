@@ -5,7 +5,6 @@ Run:
     modal deploy deployments/aryan_tutor.py
 """
 
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -92,22 +91,21 @@ Important: Do not use emojis in your responses."""
 )
 class AryanTutor:
     """Aryan Tutor with streaming memory using local embeddings."""
-    
+
     @modal.enter()
     def startup(self):
         """Initialize model, memories, and service."""
         import json
-        from dataclasses import dataclass, field
-        
+
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+
         sys.path.insert(0, "/root")
         from streaming_memory import MemoryPool
-        from streaming_memory.config import AssistantConfig, MemoryConfig, ModelConfig
-        from streaming_memory.service import StreamingMemoryService
+        from streaming_memory.config import AssistantConfig, MemoryConfig
         from streaming_memory.embeddings import create_embedder
-        
+        from streaming_memory.service import StreamingMemoryService
+
         # Create config for Aryan tutor
         self.config = AssistantConfig(
             name="aryan-tutor",
@@ -118,7 +116,7 @@ class AryanTutor:
                 memory_prefix="[Past tutoring session memories:]",
             ),
         )
-        
+
         # Load LLM
         print(f"Loading {MODEL_ID}...")
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
@@ -130,7 +128,7 @@ class AryanTutor:
         )
         self.model.eval()
         print(f"LLM loaded! Device: {next(self.model.parameters()).device}")
-        
+
         # Setup local embedding model (BGE-small)
         print(f"Loading embedding model {EMBEDDING_MODEL_ID}...")
         self.embedder = create_embedder(
@@ -138,8 +136,8 @@ class AryanTutor:
             device="cuda",
             cache_embeddings=True,
         )
-        print(f"Embedding model loaded!")
-        
+        print("Embedding model loaded!")
+
         # Create memory pool with local embedder
         print("Loading memories...")
         self.pool = MemoryPool(
@@ -148,37 +146,37 @@ class AryanTutor:
             diversity_weight=self.config.memory.diversity_weight,
             association_weight=self.config.memory.association_weight,
         )
-        
+
         # Load memories
         with open("/app/aryan_memories.json") as f:
             memories = json.load(f)
-        
+
         # Batch embed all memories using local model
         memory_contents = [m["content"] for m in memories]
         print(f"  Batch embedding {len(memory_contents)} memories...")
         self.embedder.embed_batch(memory_contents)
         print(f"  Embedded (cache size: {self.embedder.get_cache_size()})")
-        
+
         # Add memories to pool
         for mem in memories:
             created_str = mem.get("created_at", "")
             try:
                 dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
                 created_at = dt.replace(tzinfo=None)
-            except:
+            except Exception:
                 created_at = datetime.now()
-            
+
             self.pool.add(
                 content=mem["content"],
                 emotional_intensity=mem.get("emotional_intensity", 0.5),
                 created_at=created_at,
             )
-        
+
         # Calculate total tokens
         all_memory_text = "\n".join([f"- {m['content']}" for m in memories])
         pool_total_tokens = len(self.tokenizer.encode(all_memory_text))
         print(f"  Loaded {len(memories)} memories ({pool_total_tokens} tokens)")
-        
+
         # Create service
         self.service = StreamingMemoryService(
             config=self.config,
@@ -187,9 +185,9 @@ class AryanTutor:
             model=self.model,
             pool_total_tokens=pool_total_tokens,
         )
-        
+
         print("Container ready - using local BGE embeddings!")
-    
+
     @modal.asgi_app()
     def serve(self):
         from streaming_memory.api import create_app

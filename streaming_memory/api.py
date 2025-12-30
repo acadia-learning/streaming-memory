@@ -19,17 +19,17 @@ def create_app(
 ) -> FastAPI:
     """
     Create a FastAPI app for the streaming memory service.
-    
+
     Args:
         service: The StreamingMemoryService instance
         config: Assistant configuration
         model_id: Model identifier for health endpoint
-    
+
     Returns:
         FastAPI app ready to be served
     """
     app = FastAPI(title=f"Streaming Memory - {config.name}")
-    
+
     # CORS for frontend
     app.add_middleware(
         CORSMiddleware,
@@ -38,7 +38,7 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     @app.get("/health")
     async def health():
         """Health check endpoint."""
@@ -47,18 +47,18 @@ def create_app(
             "model": model_id,
             "assistant": config.name,
         }
-    
+
     @app.post("/chat/stream")
     async def chat_stream(request: Request):
         """Stream a chat response with dynamic memory retrieval."""
         data = await request.json()
-        
+
         message = data.get("message", "")
         history = data.get("history", [])
         update_every_n = data.get("update_every_n", 1)
         max_memories = data.get("max_memories", 5)
         lookback_tokens = data.get("lookback_tokens", 60)
-        
+
         def generate():
             for event in service.generate_stream(
                 message=message,
@@ -68,12 +68,12 @@ def create_app(
                 lookback_tokens=lookback_tokens,
             ):
                 yield event.to_sse()
-        
+
         return StreamingResponse(
             generate(),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
-    
+
     return app
 

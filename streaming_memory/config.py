@@ -6,19 +6,18 @@ Define system prompts, memory sources, and deployment-specific settings.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
 
 
 @dataclass
 class MemoryConfig:
     """Configuration for a memory pool."""
-    
+
     # Path to JSON file with memories (each item has "content", optional "emotional_intensity", "created_at")
     memory_file: str | Path
-    
+
     # Prefix shown before memories in the prompt
     memory_prefix: str = "[Memories:]"
-    
+
     # MemoryPool parameters
     softmax_temperature: float = 0.15
     diversity_weight: float = 0.5
@@ -28,7 +27,7 @@ class MemoryConfig:
 @dataclass
 class ModelConfig:
     """Configuration for the LLM."""
-    
+
     model_id: str = "Qwen/Qwen3-8B"
     torch_dtype: str = "bfloat16"
     temperature: float = 0.7
@@ -38,19 +37,19 @@ class ModelConfig:
 @dataclass
 class AssistantConfig:
     """Complete configuration for a streaming memory assistant."""
-    
+
     # Unique name for this assistant
     name: str
-    
+
     # System prompt for the LLM
     system_prompt: str
-    
+
     # Memory configuration
     memory: MemoryConfig
-    
+
     # Model configuration (optional, uses defaults)
     model: ModelConfig = field(default_factory=ModelConfig)
-    
+
     # Optional description for UI
     description: str = ""
 
