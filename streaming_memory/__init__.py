@@ -53,6 +53,14 @@ from .longmemeval import (
 from .memory import Connection, Memory, MemoryPool, QueryAssociation
 from .sample_data import SAMPLE_MEMORIES, load_sample_memories
 from .service import StreamEvent, StreamingMemoryService
+from .voice_agent import (
+    AgentState,
+    DeepgramFluxClient,
+    Transcript,
+    VoiceAgentService,
+    VoiceEvent,
+    create_voice_agent,
+)
 
 
 def create_app(*args, **kwargs):
@@ -77,6 +85,13 @@ __all__ = [
     # Service
     "StreamingMemoryService",
     "StreamEvent",
+    # Voice agent
+    "VoiceAgentService",
+    "VoiceEvent",
+    "DeepgramFluxClient",
+    "AgentState",
+    "Transcript",
+    "create_voice_agent",
     # API
     "create_app",
     # LongMemEval integration

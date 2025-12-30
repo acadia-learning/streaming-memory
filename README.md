@@ -36,20 +36,53 @@ Hebbian update: strengthen associations between co-retrieved memories
 - **Query Diversity**: Prevents "generalist" memories from dominating by normalizing by query diversity
 - **Real-time Visualization**: See which memories are active at each token
 
+## Benchmark Results (LongMemEval)
+
+Evaluated on [LongMemEval](https://github.com/xiaowu0162/longmemeval), a long-term memory benchmark for LLMs with 500 questions across 6 categories.
+
+### Overall Accuracy: **77.2%**
+
+| Question Type             | Accuracy            |
+| ------------------------- | ------------------- |
+| single-session-user       | **98.6%** (69/70)   |
+| multi-session             | **82.7%** (110/133) |
+| knowledge-update          | **79.5%** (62/78)   |
+| single-session-assistant  | **69.6%** (39/56)   |
+| temporal-reasoning        | **66.2%** (88/133)  |
+| single-session-preference | **60.0%** (18/30)   |
+
+### Retrieval Metrics
+
+| Metric               | Value | Description                                            |
+| -------------------- | ----- | ------------------------------------------------------ |
+| **Session Recall**   | 99.8% | Retrieved at least one memory from the correct session |
+| **Memory Recall**    | 68.1% | Fraction of relevant memories retrieved                |
+| **Memory Precision** | 100%  | All retrieved memories were relevant                   |
+| **Avg Memory Swaps** | 5.9   | Dynamic re-retrievals per question                     |
+
+### Performance
+
+| Metric              | Value     |
+| ------------------- | --------- |
+| Time to First Token | ~826ms    |
+| Generation Speed    | ~11 tok/s |
+
+_Evaluated with Qwen3-8B on Modal L4 GPUs, BGE-small-en-v1.5 embeddings, max 10 memories, re-retrieval every 10 tokens._
+
 ## Architecture
 
 ### Memory Scoring
 
 Each memory is scored by combining:
 
-| Factor | Description |
-|--------|-------------|
-| **Semantic Similarity** | Cosine similarity² (squared to make it multiplicative) |
-| **Recency** | Exponential decay from last retrieval |
-| **Frequency** | How often retrieved (normalized by average) |
-| **Emotional Intensity** | Surprise/importance factor |
-| **Hebbian Associations** | Strength of connections to other retrieved memories |
-| **Query Specificity** | Penalizes memories retrieved by many different queries |
+| Factor                   | Description                                            |
+| ------------------------ | ------------------------------------------------------ |
+| **Semantic Similarity**  | Cosine similarity² (squared to make it multiplicative) |
+| **Recency**              | Exponential decay from last retrieval                  |
+| **Frequency**            | How often retrieved (normalized by average)            |
+| **Emotional Intensity**  | Surprise/importance factor                             |
+| **Hebbian Associations** | Strength of connections to other retrieved memories    |
+| **Query Specificity**    | Penalizes memories retrieved by many different queries |
 
 ```python
 # Core scoring formula
@@ -150,6 +183,7 @@ npx vercel --prod
 ```
 
 **Important:** In Vercel, set the environment variable:
+
 - Go to your Vercel project settings
 - Navigate to "Environment Variables"
 - Add: `VITE_API_URL` = `https://YOUR_USERNAME--streaming-memory-familyassistant-serve.modal.run`
@@ -162,21 +196,25 @@ npx vercel --prod
 If you see "Failed to fetch" in production:
 
 1. **Check Modal deployment is running:**
+
    ```bash
    modal app list
    modal app logs streaming-memory
    ```
 
 2. **Verify API URL is correct:**
+
    - The URL should match your Modal deployment
    - Check Vercel environment variables are set correctly
 
 3. **Test the API directly:**
+
    ```bash
    curl https://YOUR_USERNAME--streaming-memory-familyassistant-serve.modal.run/health
    ```
 
 4. **Check browser console:**
+
    - Open Developer Tools → Console
    - Look for detailed error messages about the connection
 
@@ -188,6 +226,7 @@ If you see "Failed to fetch" in production:
 ### CORS issues
 
 CORS is configured to allow all origins in `streaming_memory/api.py`. If you still see CORS errors:
+
 - Verify your Modal deployment is using the latest code
 - Redeploy with: `modal deploy deployments/family_assistant.py`
 
@@ -195,10 +234,10 @@ CORS is configured to allow all origins in `streaming_memory/api.py`. If you sti
 
 ### Memory Settings (via UI)
 
-| Setting | Range | Description |
-|---------|-------|-------------|
+| Setting              | Range       | Description                    |
+| -------------------- | ----------- | ------------------------------ |
 | **Update Frequency** | 1-20 tokens | How often to re-query memories |
-| **Max Memories** | 1-15 | Maximum memories in context |
+| **Max Memories**     | 1-15        | Maximum memories in context    |
 
 ### Pool Parameters
 

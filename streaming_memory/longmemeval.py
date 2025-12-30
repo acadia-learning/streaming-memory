@@ -39,10 +39,21 @@ class SessionMemories(BaseModel):
 # ============================================================================
 
 SUMMARIZER_SYSTEM_PROMPT = """You are an AI assistant reviewing a past conversation with a user.
-Extract distinct memories - facts, preferences, events, or insights you learned.
+Extract distinct memories covering:
+- What the user did, said, or experienced
+- What you did, recommended, or explained  
+- What you inferred, noticed, or thought about
+
+Write each memory in FIRST PERSON from your perspective as the assistant.
+
+CRITICAL: Be extremely specific. Always include:
+- Exact names, titles, brands mentioned
+- Specific numbers, quantities, amounts
+- Particular places, locations, venues
+- Concrete recommendations (e.g., "I recommended Ruby, Python, and PHP" not "I recommended some languages")
 
 For each memory:
-1. Write in FIRST PERSON ("I learned...", "The user told me...", "I noticed...")
+1. Preserve specific details exactly as mentioned - don't summarize away the details
 2. Rate emotional_intensity (0-1):
    - 0.3-0.4: Routine facts (preferences, schedules)
    - 0.5-0.6: Notable information (life events, problems)
@@ -51,9 +62,8 @@ For each memory:
 3. Include event_date (YYYY-MM-DD) if a specific date is mentioned or can be inferred.
    - If the user says "yesterday" or "last week", calculate the actual date from the conversation date.
    - If no specific date, leave event_date as null.
-   - IMPORTANT: Preserve ALL dates mentioned - they are critical for temporal reasoning.
 
-Extract ALL distinct pieces of information. A single conversation may yield multiple memories."""
+Extract ALL distinct pieces of information from the conversation."""
 
 
 def format_session_for_summarization(session: list[dict]) -> str:

@@ -43,8 +43,8 @@ def download_model():
 def download_embedding_model():
     """Download embedding model during image build."""
     from huggingface_hub import snapshot_download
-    snapshot_download("Alibaba-NLP/gte-Qwen2-1.5B-instruct")
-    print("Downloaded Alibaba-NLP/gte-Qwen2-1.5B-instruct (qwen3-embedding-8b)")
+    snapshot_download("BAAI/bge-small-en-v1.5")
+    print("Downloaded BAAI/bge-small-en-v1.5")
 
 
 # Build image with all dependencies
@@ -53,6 +53,7 @@ image = (
     .pip_install(
         "torch",
         "transformers>=4.40",
+        "sentence-transformers>=2.2.0",
         "accelerate>=0.28",
         "numpy",
         "huggingface_hub",
@@ -64,7 +65,7 @@ image = (
     .run_function(download_model)
     .run_function(download_embedding_model)
     .add_local_dir(
-        Path(__file__).parent.parent / "streaming_memory",
+        Path(__file__).parent.parent.parent / "streaming_memory",
         "/app/streaming_memory"
     )
 )
@@ -100,10 +101,10 @@ class LongMemEvalRunner:
             device_map="auto",
         )
         
-        # Load local embedding model (qwen3-embedding-8b)
+        # Load local embedding model (BGE-small)
         print("🔧 Loading embedding model...")
         self.embedder = create_embedder(
-            model_name="Alibaba-NLP/gte-Qwen2-1.5B-instruct",
+            model_name="BAAI/bge-small-en-v1.5",
             device="cuda",  # Modal GPUs support CUDA
             cache_embeddings=True,
         )
@@ -242,6 +243,7 @@ def main(
     max_memories: int = 10,
     lookback_tokens: int = 60,
     limit: int | None = None,
+    indices: str | None = None,
 ):
     """
     Run LongMemEval evaluation.
@@ -254,6 +256,7 @@ def main(
         max_memories: Maximum memories in context
         lookback_tokens: Tokens to look back for re-retrieval
         limit: Optional limit on instances to process
+        indices: Optional path to JSON file with specific indices to evaluate
     """
     import urllib.request
     
@@ -271,12 +274,20 @@ def main(
     
     print(f"Downloading {dataset} dataset...")
     with urllib.request.urlopen(dataset_urls[dataset]) as response:
-        data = json.loads(response.read())
-    print(f"Loaded {len(data)} instances")
+        all_data = json.loads(response.read())
+    print(f"Loaded {len(all_data)} instances")
     
-    if limit:
-        data = data[:limit]
+    # Select instances by indices if provided
+    if indices:
+        with open(indices) as f:
+            idx_list = json.load(f)
+        data = [all_data[i] for i in idx_list]
+        print(f"Selected {len(data)} instances from indices file")
+    elif limit:
+        data = all_data[:limit]
         print(f"Limited to {limit} instances")
+    else:
+        data = all_data
     
     # Run evaluation
     runner = LongMemEvalRunner()

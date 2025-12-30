@@ -461,12 +461,18 @@ export default function Landing() {
               Watch the memory context change as the model generates.
             </p>
 
-            <div className="flex justify-center gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               <Link
                 to="/demo"
                 className="inline-block px-8 py-4 bg-[#1a1a1a] text-white rounded-full font-medium hover:bg-[#333] transition-colors"
               >
-                Try the Demo
+                Text Demo
+              </Link>
+              <Link
+                to="/voice"
+                className="inline-block px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white rounded-full font-medium hover:from-violet-500 hover:to-cyan-500 transition-colors"
+              >
+                Voice Demo
               </Link>
             </div>
 
