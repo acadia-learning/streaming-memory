@@ -57,6 +57,10 @@ export default function LoadingSteps({ loadingStep }) {
           {loadingStep === 2 && 'Loading model...'}
           {loadingStep === 3 && 'Almost there...'}
         </p>
+        
+        <p className="text-[#ccc] text-xs text-center mt-4">
+          Cold start may take up to 90 seconds
+        </p>
       </motion.div>
     </div>
   );
