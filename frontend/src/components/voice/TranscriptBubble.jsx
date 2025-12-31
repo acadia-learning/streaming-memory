@@ -17,3 +17,5 @@ export default function TranscriptBubble({ displayedTranscript, liveTranscript, 
   );
 }
 
+
+
